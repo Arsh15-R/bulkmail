@@ -15,8 +15,8 @@ const getCampaigns = async (req, res) => {
       params.push(status);
     }
 
-    const countRow = await get(`SELECT COUNT(*) as total FROM (${query})`, params);
-    const total = countRow ? countRow.total : 0;
+    const countRow = await get(`SELECT COUNT(*) as total FROM (${query}) AS count_subquery`, params);
+    const total = countRow ? Number(countRow.total) : 0;
 
     query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
     params.push(parseInt(limit, 10), offset);

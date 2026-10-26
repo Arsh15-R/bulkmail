@@ -33,9 +33,9 @@ const getContacts = async (req, res) => {
       params.push(groupId);
     }
 
-    const countQuery = `SELECT COUNT(*) as total FROM (${query})`;
+    const countQuery = `SELECT COUNT(*) as total FROM (${query}) AS count_subquery`;
     const countRow = await get(countQuery, params);
-    const total = countRow ? countRow.total : 0;
+    const total = countRow ? Number(countRow.total) : 0;
 
     query += ` ORDER BY c.created_at DESC LIMIT ? OFFSET ?`;
     params.push(parseInt(limit, 10), offset);
@@ -98,7 +98,7 @@ const createContact = async (req, res) => {
     const contactId = result.lastID;
 
     if (groupId) {
-      await run('INSERT OR IGNORE INTO group_contacts (group_id, contact_id) VALUES (?, ?)', [groupId, contactId]);
+      await run('INSERT INTO group_contacts (group_id, contact_id) VALUES (?, ?) ON CONFLICT DO NOTHING', [groupId, contactId]);
     }
 
     const contact = await get('SELECT * FROM contacts WHERE id = ?', [contactId]);
@@ -241,7 +241,7 @@ const importContacts = async (req, res) => {
       }
 
       if (groupId && contactId) {
-        await run('INSERT OR IGNORE INTO group_contacts (group_id, contact_id) VALUES (?, ?)', [groupId, contactId]);
+        await run('INSERT INTO group_contacts (group_id, contact_id) VALUES (?, ?) ON CONFLICT DO NOTHING', [groupId, contactId]);
       }
     }
 

@@ -12,7 +12,7 @@ const checkPendingScheduledJobs = async () => {
       `SELECT sj.*, c.status as campaign_status 
        FROM scheduled_jobs sj 
        JOIN campaigns c ON sj.campaign_id = c.id 
-       WHERE sj.status = 'pending' AND sj.run_at <= datetime('now')`,
+       WHERE sj.status = 'pending' AND sj.run_at <= CURRENT_TIMESTAMP`,
       []
     );
 

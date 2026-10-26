@@ -1,4 +1,9 @@
-const { Pool } = require('pg');
+const path = require('path');
+if (!process.env.DATABASE_URL) {
+  require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+}
+const { Pool, types } = require('pg');
+types.setTypeParser(20, (val) => (val === null ? null : parseInt(val, 10)));
 const { supabase } = require('./supabase');
 
 const getConnectionString = () => {
@@ -8,7 +13,7 @@ const getConnectionString = () => {
   const dbPassword = process.env.SUPABASE_DB_PASSWORD || process.env.DB_PASSWORD;
   const projectRef = process.env.SUPABASE_PROJECT_REF || 'pkofxyqunqjwwffivfru';
   if (dbPassword) {
-    return `postgresql://postgres.${projectRef}:${encodeURIComponent(dbPassword)}@aws-0-us-east-1.pooler.supabase.com:6543/postgres`;
+    return `postgresql://postgres.${projectRef}:${encodeURIComponent(dbPassword)}@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres`;
   }
   return null;
 };
@@ -38,10 +43,21 @@ if (connectionString) {
   );
 }
 
-// Convert standard '?' placeholders to PostgreSQL '$1, $2, ...'
+// Convert standard '?' placeholders to PostgreSQL '$1, $2, ...' and SQLite compatibility functions
 const convertPlaceholders = (sql) => {
   let index = 1;
-  return sql.replace(/\?/g, () => `$${index++}`);
+  let pgSql = sql
+    .replace(/datetime\('now'\)/gi, 'CURRENT_TIMESTAMP')
+    .replace(/DO UPDATE SET count = count \+ 1/gi, 'DO UPDATE SET count = daily_send_logs.count + 1');
+
+  if (/insert\s+or\s+ignore\s+into/i.test(pgSql)) {
+    pgSql = pgSql.replace(/insert\s+or\s+ignore\s+into/gi, 'INSERT INTO');
+    if (!/on\s+conflict/i.test(pgSql)) {
+      pgSql += ' ON CONFLICT DO NOTHING';
+    }
+  }
+
+  return pgSql.replace(/\?/g, () => `$${index++}`);
 };
 
 const ensurePool = () => {
@@ -63,7 +79,7 @@ const ensurePool = () => {
 const get = async (sql, params = []) => {
   const pool = ensurePool();
   const res = await pool.query(convertPlaceholders(sql), params);
-  return res.rows[0] || null;
+  return res.rows[0];
 };
 
 const all = async (sql, params = []) => {
@@ -76,7 +92,8 @@ const run = async (sql, params = []) => {
   const pool = ensurePool();
   let pgSql = sql;
   const isInsert = /^\s*insert\s+into/i.test(sql);
-  if (isInsert && !/returning/i.test(sql)) {
+  const hasNoIdColumn = /insert\s+into\s+group_contacts/i.test(sql);
+  if (isInsert && !/returning/i.test(sql) && !hasNoIdColumn) {
     pgSql = `${sql} RETURNING id`;
   }
 

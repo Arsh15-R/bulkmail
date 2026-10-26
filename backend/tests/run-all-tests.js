@@ -1,5 +1,6 @@
-const { spawn } = require('child_process');
 const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+const { spawn } = require('child_process');
 
 const runScript = (scriptName) => {
   return new Promise((resolve, reject) => {

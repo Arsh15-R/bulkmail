@@ -144,7 +144,7 @@ const addMembers = async (req, res) => {
       // Verify contact belongs to the authenticated user to prevent IDOR
       const contact = await get('SELECT id FROM contacts WHERE id = ? AND user_id = ?', [cid, userId]);
       if (contact) {
-        await run('INSERT OR IGNORE INTO group_contacts (group_id, contact_id) VALUES (?, ?)', [id, cid]);
+        await run('INSERT INTO group_contacts (group_id, contact_id) VALUES (?, ?) ON CONFLICT DO NOTHING', [id, cid]);
         addedCount++;
       }
     }

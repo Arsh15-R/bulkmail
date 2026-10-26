@@ -258,7 +258,7 @@ class EmailQueueService extends EventEmitter {
         await run(
           `INSERT INTO daily_send_logs (user_id, date, count) 
            VALUES (?, ?, 1) 
-           ON CONFLICT(user_id, date) DO UPDATE SET count = count + 1`,
+           ON CONFLICT(user_id, date) DO UPDATE SET count = daily_send_logs.count + 1`,
           [userId, today]
         );
       }
@@ -315,7 +315,7 @@ class EmailQueueService extends EventEmitter {
       [campaignId]
     );
 
-    if (pending && pending.count === 0) {
+    if (pending && Number(pending.count) === 0) {
       await run(
         "UPDATE campaigns SET status = 'completed', completed_at = CURRENT_TIMESTAMP WHERE id = ?",
         [campaignId]
