@@ -163,8 +163,9 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 | `FRONTEND_URL` | Allowed frontend origin(s) for CORS (comma-separated for multiple) | `http://localhost:5173` | Yes |
 | `APP_BASE_URL` | Public backend URL for tracking pixels, clicks, and unsubscribes | `http://localhost:5000` | Yes |
 | `JWT_SECRET` | Cryptographic secret for signing auth tokens (min 32 chars) | `your_secret_key` | Yes |
-| `DATABASE_PROVIDER` | Database adapter (`sqlite` or `firebase`) | `sqlite` | Yes |
-| `DB_PATH` | Path to SQLite database file (use persistent volume in prod) | `./data/bulkmailer.db` | Yes |
+| `DATABASE_PROVIDER` | Database adapter (`supabase`, `sqlite`, or `firebase`) | `supabase` | Yes |
+| `DATABASE_URL` | Supabase PostgreSQL URI (Transaction Pooler port 6543 recommended) | `postgresql://...` | If Supabase |
+| `DB_PATH` | Path to SQLite database file (when using SQLite) | `./data/bulkmailer.db` | If SQLite |
 | `UPLOADS_DIR` | Directory to store uploaded attachments | `./uploads` | No |
 | `EMAIL_PROVIDER` | Sending provider (`smtp` or `mock`) | `smtp` | Yes |
 | `SMTP_HOST` | SMTP server hostname | `smtp.gmail.com` | If SMTP |
