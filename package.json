@@ -4,16 +4,30 @@
   "description": "Production-grade bulk email web application with mail merge, scheduling, tracking, and list hygiene",
   "homepage": "https://bulkmail-gold.vercel.app",
   "main": "backend/src/server.js",
-  "workspaces": [
-    "backend",
-    "frontend"
-  ],
   "scripts": {
     "build": "npm run build --prefix frontend",
     "start": "node backend/src/server.js",
     "dev:backend": "npm run dev --prefix backend",
     "dev:frontend": "npm run dev --prefix frontend",
     "test": "npm test --prefix backend"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.109.0",
+    "adm-zip": "^0.5.16",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "csv-parser": "^3.0.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.16",
+    "pg": "^8.23.1",
+    "sanitize-html": "^2.14.0",
+    "validator": "^13.12.0",
+    "ws": "^8.22.0"
   },
   "keywords": [
     "email",
