@@ -2,7 +2,7 @@
 
 > A production-grade, full-stack bulk email web application with four sending modes, dynamic mail merge, real-time engagement tracking, queue deliverability safeguards, and automated scheduling powered by Supabase PostgreSQL.
 
-🌐 **Live Demo:** [[LIVE URL]]([LIVE URL])
+🌐 **Live Demo:** [https://bulkmail-gold.vercel.app](https://bulkmail-gold.vercel.app)
 
 ---
 
