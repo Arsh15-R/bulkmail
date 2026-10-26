@@ -52,7 +52,8 @@ class SmtpEmailProvider extends BaseEmailProvider {
   }
 
   async verify() {
-    if (!this.transporter || !process.env.SMTP_USER) {
+    this.initTransporter();
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
       return { ok: false, message: 'SMTP credentials not configured in .env' };
     }
     try {
