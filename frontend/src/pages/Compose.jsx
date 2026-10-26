@@ -1312,7 +1312,7 @@ export const Compose = ({ onNavigateToHistory }) => {
                 className="rounded-control border border-border bg-surface px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-accent"
               />
               <span className="text-text-muted text-[11px]">
-                Jobs persist in SQLite and survive server restarts.
+                Jobs persist in Supabase and survive server restarts.
               </span>
             </div>
           )}

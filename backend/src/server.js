@@ -5,7 +5,6 @@ const path = require('path');
 const fs = require('fs');
 const { initSchema } = require('./models/schema');
 const { initScheduler } = require('./services/scheduler');
-const { initFirebase } = require('./config/firebase');
 
 // Routes
 const authRoutes = require('./routes/auth');
@@ -69,15 +68,48 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.get('/api/firebase-status', (req, res) => {
-  const firebaseStatus = initFirebase();
-  res.json({
-    success: true,
-    isFirebaseConfigured: firebaseStatus.isConfigured,
-    message: firebaseStatus.isConfigured
-      ? 'Firebase Admin SDK is connected and active.'
-      : 'Firebase credentials not yet detected. Add serviceAccountKey.json to backend/ or configure FIREBASE_* environment variables.'
-  });
+// Supabase Database status check
+app.get('/api/database-status', async (req, res) => {
+  try {
+    const { ping, supabase } = require('./config/db');
+    let pgConnected = false;
+    let pgTime = null;
+    let pgError = null;
+
+    try {
+      pgTime = await ping();
+      pgConnected = true;
+    } catch (e) {
+      pgError = e.message;
+    }
+
+    let supabaseJsConnected = false;
+    if (supabase) {
+      try {
+        const { error } = await supabase.from('users').select('id').limit(1);
+        supabaseJsConnected = !error;
+      } catch (e) {
+        supabaseJsConnected = false;
+      }
+    }
+
+    res.json({
+      success: true,
+      database: 'supabase',
+      projectUrl: process.env.SUPABASE_URL || 'https://pkofxyqunqjwwffivfru.supabase.co',
+      status: pgConnected ? 'connected' : (supabaseJsConnected ? 'connected_via_sdk' : 'awaiting_database_password'),
+      postgresPool: {
+        connected: pgConnected,
+        serverTime: pgTime,
+        error: pgError
+      },
+      supabaseClient: {
+        connected: supabaseJsConnected
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // Mount Routes
@@ -123,9 +155,14 @@ app.use((err, req, res, next) => {
 
 const startServer = async () => {
   try {
-    await initSchema();
+    try {
+      await initSchema();
+      console.log('✅ Supabase PostgreSQL schema verified.');
+    } catch (schemaErr) {
+      console.warn('⚠️ Supabase schema initialization notice:', schemaErr.message);
+    }
+
     initScheduler();
-    initFirebase();
 
     const server = app.listen(PORT, () => {
       console.log(` BulkMailer backend server running on http://localhost:${PORT}`);

@@ -18,7 +18,8 @@
     "mail-merge",
     "nodemailer",
     "react",
-    "sqlite",
+    "supabase",
+    "postgresql",
     "express"
   ],
   "author": "BulkMailer Team",

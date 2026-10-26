@@ -1,6 +1,6 @@
 # BulkMailer 🚀
 
-> A production-grade, full-stack bulk email web application with four sending modes, dynamic mail merge, real-time engagement tracking, queue deliverability safeguards, and automated scheduling.
+> A production-grade, full-stack bulk email web application with four sending modes, dynamic mail merge, real-time engagement tracking, queue deliverability safeguards, and automated scheduling powered by Supabase PostgreSQL.
 
 🌐 **Live Demo:** [[LIVE URL]]([LIVE URL])
 
@@ -52,7 +52,7 @@
 - **Backend:**
   - Node.js & Express.js (RESTful API architecture)
   - Nodemailer (SMTP abstraction with Gmail, SendGrid, Mailgun, Amazon SES support)
-  - SQLite3 (WAL journal mode, foreign keys enabled) with optional Firebase Firestore support
+  - Supabase PostgreSQL with connection pooling (`pg`) and `@supabase/supabase-js`
   - `node-cron` for scheduled automation
   - Server-Sent Events (SSE) for real-time progress streaming
   - JWT Authentication & `bcryptjs` password hashing
@@ -66,106 +66,82 @@
 bulkmailer/
 ├── backend/                  # Node.js + Express API server
 │   ├── src/
-│   │   ├── config/           # Database, Firebase, and Mailer configuration
-│   │   ├── controllers/      # Route controllers (tracking, campaigns)
-│   │   ├── middleware/       # Auth JWT, Multer uploads, security
-│   │   ├── models/           # SQLite schema and migration definitions
+│   │   ├── config/           # Supabase PostgreSQL database, and Mailer configuration
+│   │   ├── controllers/      # Route controllers (tracking, campaigns, auth, contacts)
+│   │   ├── middleware/       # Auth JWT, Multer uploads, security rate limiting
+│   │   ├── models/           # Supabase PostgreSQL schema and table definitions
 │   │   ├── routes/           # Express API endpoints (/auth, /send, /contacts, etc.)
 │   │   ├── services/         # Mailer engine, Queue dispatcher, Scheduler
 │   │   └── server.js         # Express app entrypoint & static frontend server
-│   ├── data/                 # SQLite database storage (bulkmailer.db)
 │   ├── uploads/              # Attachment file storage
 │   ├── tests/                # Automated test suites (Auth, Queue, Security, E2E)
 │   └── package.json
 ├── frontend/                 # React + Vite frontend application
 │   ├── src/
-│   │   ├── components/       # Modals, Navbar, Sidebar, RichEditor, Arc tokens
-│   │   ├── context/          # AuthContext, ThemeContext
-│   │   ├── pages/            # Compose, Contacts, Groups, Templates, History, Settings
-│   │   ├── services/         # API client connector
-│   │   ├── App.jsx           # Application shell & routing
-│   │   └── main.jsx          # Vite root entrypoint
-│   ├── vite.config.js        # Vite config with proxy & path aliases
+│   │   ├── components/       # Arc UI modals, Rich Editor, Navbar, Sidebar
+│   │   ├── context/          # Auth Context & Dark Mode Theme Context
+│   │   ├── pages/            # Compose, Contacts, Groups, Templates, History
+│   │   └── services/         # Backend Axios API client
 │   └── package.json
-├── .env.example              # Master environment variable template
-├── .gitignore                # Git exclusions (credentials, databases, node_modules)
-└── package.json              # Monorepo build and start scripts
+├── sample-data/              # Sample CSV contacts & invoices for immediate demo
+├── supabase_schema.sql       # Supabase PostgreSQL schema initialization script
+└── README.md
 ```
 
 ---
 
 ## 💻 Local Setup Guide
 
-### 1. Prerequisites
-- **Node.js**: v18.0.0 or higher
-- **npm**: v9.0.0 or higher
-- **Git**
+### 1. Clone & Install Dependencies
 
-### 2. Clone the Repository
 ```bash
-git clone https://github.com/[YOUR-USERNAME]/[YOUR-REPO-NAME].git
-cd [YOUR-REPO-NAME]
-```
+git clone https://github.com/Arsh15-R/bulkmail.git
+cd bulkmail
 
-### 3. Install Dependencies
-```bash
-# Install root, backend, and frontend dependencies
+# Install both backend and frontend dependencies in one command
 npm run install:all
 ```
 
-### 4. Configure Environment Variables
-Copy the `.env.example` file to create your backend `.env`:
+### 2. Configure Environment Variables
+
+Copy `.env.example` to `backend/.env`:
 ```bash
 cp .env.example backend/.env
 ```
 
-Open `backend/.env` and configure your credentials:
-```env
-PORT=5000
-FRONTEND_URL=http://localhost:5173
-APP_BASE_URL=http://localhost:5000
-JWT_SECRET=your_super_secret_jwt_key_at_least_32_chars
+Open `backend/.env` and update:
+- `JWT_SECRET` (generate a random 32+ char string)
+- `DATABASE_URL` (your Supabase PostgreSQL connection string)
+- `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
+- `SMTP_USER` and `SMTP_PASS` (e.g., your Gmail App Password)
 
-# SMTP Configuration (Example: Gmail App Password)
-EMAIL_PROVIDER=smtp
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your_email@gmail.com
-SMTP_PASS=your_16_character_app_password
-EMAIL_FROM="BulkMailer Dispatcher" <your_email@gmail.com>
-```
+### 3. Initialize Supabase Database
 
-> **Gmail App Password Instructions:**
-> 1. Enable 2-Step Verification on your Google Account: [myaccount.google.com/security](https://myaccount.google.com/security).
-> 2. Generate an **App Password**: [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
-> 3. Select "Mail" and "Other (Custom name)", name it `BulkMailer`, and copy the 16-character code into `SMTP_PASS`.
+Run the SQL script `supabase_schema.sql` in your [Supabase SQL Editor](https://supabase.com/dashboard/project/_/sql/new) to create all 11 tables and indexes.
 
-### 5. Run the Application
-In your terminal, start the backend and frontend concurrently:
+### 4. Run Development Servers
+
 ```bash
-# Terminal 1: Backend API (port 5000)
+# Terminal 1 - Backend API (runs on http://localhost:5000)
 npm run dev:backend
 
-# Terminal 2: Frontend Client (port 5173)
+# Terminal 2 - Frontend UI (runs on http://localhost:5173)
 npm run dev:frontend
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
-
 ---
 
-## ⚙️ Environment Variables
+## 🔑 Environment Variables
 
 | Variable | Description | Default / Example | Required |
 |---|---|---|:---:|
 | `PORT` | Port the backend server listens on | `5000` | Yes |
-| `FRONTEND_URL` | Allowed frontend origin(s) for CORS (comma-separated for multiple) | `http://localhost:5173` | Yes |
+| `FRONTEND_URL` | Allowed frontend origin(s) for CORS | `http://localhost:5173` | Yes |
 | `APP_BASE_URL` | Public backend URL for tracking pixels, clicks, and unsubscribes | `http://localhost:5000` | Yes |
 | `JWT_SECRET` | Cryptographic secret for signing auth tokens (min 32 chars) | `your_secret_key` | Yes |
-| `DATABASE_PROVIDER` | Database adapter (`supabase`, `sqlite`, or `firebase`) | `supabase` | Yes |
-| `DATABASE_URL` | Supabase PostgreSQL URI (Transaction Pooler port 6543 recommended) | `postgresql://...` | If Supabase |
-| `DB_PATH` | Path to SQLite database file (when using SQLite) | `./data/bulkmailer.db` | If SQLite |
+| `DATABASE_URL` | Supabase PostgreSQL URI (Transaction Pooler port 6543 recommended) | `postgresql://...` | Yes |
+| `SUPABASE_URL` | Supabase project URL | `https://xxxx.supabase.co` | Yes |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Service Role Secret Key | `sb_secret_...` | Yes |
 | `UPLOADS_DIR` | Directory to store uploaded attachments | `./uploads` | No |
 | `EMAIL_PROVIDER` | Sending provider (`smtp` or `mock`) | `smtp` | Yes |
 | `SMTP_HOST` | SMTP server hostname | `smtp.gmail.com` | If SMTP |
@@ -200,16 +176,15 @@ In this mode, the backend serves both the `/api` endpoints and the compiled Reac
 - **Port:** Auto-detected via `process.env.PORT` (defaults to `5000`)
 
 > [!IMPORTANT]
-> **Persistent Disk for SQLite:**
-> Cloud platforms (like Render, Railway, Fly) use ephemeral containers that wipe local disk changes on restart. To keep your contacts, templates, and history:
-> 1. Attach a **Persistent Disk Volume** in your hosting dashboard (e.g. mount path: `/data`).
-> 2. Set the environment variable: `DB_PATH=/data/bulkmailer.db`.
-> 3. Set `UPLOADS_DIR=/data/uploads` if you want uploaded attachments to persist across restarts.
-> *(Alternatively, set `DATABASE_PROVIDER=firebase` to use cloud-hosted Firebase Firestore with zero disk dependencies).*
+> **Supabase PostgreSQL Database:**
+> BulkMailer uses Supabase PostgreSQL for cloud-native persistence with zero local disk dependencies.
+> 1. Run `supabase_schema.sql` in your [Supabase SQL Editor](https://supabase.com/dashboard).
+> 2. Set `DATABASE_URL` in your hosting dashboard with your Supabase Transaction Pooler URI.
+> 3. Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
 
 ---
 
-### Option B: Separate Frontend (Vercel / Cloudflare / Netlify) + Backend (Render / Railway / OnDev)
+### Option B: Separate Frontend & Backend Deployment
 
 #### 1. Backend Service
 - **Root Directory:** `backend/`
@@ -219,24 +194,25 @@ In this mode, the backend serves both the `/api` endpoints and the compiled Reac
 - **Environment Variables:** Set all variables from `.env.example`, including:
   - `FRONTEND_URL=https://[YOUR-FRONTEND-URL]`
   - `APP_BASE_URL=https://[YOUR-BACKEND-URL]`
-  - Attach a persistent disk and set `DB_PATH=/data/bulkmailer.db`.
+  - `DATABASE_URL=postgresql://postgres.yourprojectref:yourpassword@aws-0-us-east-1.pooler.supabase.com:6543/postgres`
 
 #### 2. Frontend Service
 - **Root Directory:** `frontend/`
 - **Build Command:** `npm run build`
 - **Output Directory:** `dist`
-- **Environment Variables:**
+- **Environment Variable:**
   - `VITE_API_URL=https://[YOUR-BACKEND-URL]`
 
 ---
 
-### Option C: Custom Domain with `runs-on.dev`
-To point a free developer subdomain from [runs-on.dev](https://runs-on.dev) to your live deployment:
-1. Fork or open the [runs-on.dev GitHub repository](https://github.com/zordhalo/runs-on.dev).
-2. Create `domains/yourname.json`:
+## 🌐 Custom Subdomain Setup: `*.runs-on.dev`
+
+If you are deploying on a platform that supports GitHub-managed subdomains (such as `runs-on.dev`):
+1. Fork or open the [runs-on.dev DNS repository](https://github.com/runs-on-dev/dns).
+2. Add a JSON record under `domains/`:
    ```json
    {
-     "name": "yourname",
+     "description": "BulkMailer production web application",
      "owner": {
        "github": "your-github-username"
      },
@@ -253,13 +229,12 @@ To point a free developer subdomain from [runs-on.dev](https://runs-on.dev) to y
 
 ### Suggested About Description
 ```text
-Full-stack bulk email web app with mail merge, scheduling, open/click tracking, templates, and deliverability safeguards built with React & Node.js.
+Production-grade bulk email web app with mail merge, scheduling, open/click tracking, templates, and Supabase PostgreSQL backend.
 ```
-*(150 characters — fits within GitHub's 160-character limit)*
 
 ### Suggested Repository Topics
 ```text
-email, bulk-email, mail-merge, nodemailer, react, vite, tailwindcss, arc-ui, sqlite, express, email-marketing, email-automation, open-tracking, click-tracking, linear-style
+email, bulk-email, mail-merge, nodemailer, react, vite, tailwindcss, arc-ui, supabase, postgresql, express, email-marketing, email-automation, open-tracking, click-tracking, linear-style
 ```
 
 ---

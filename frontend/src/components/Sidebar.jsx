@@ -119,7 +119,7 @@ export const Sidebar = ({
         {isCollapsed ? (
           <div
             className="flex flex-col items-center justify-center p-2 rounded-control bg-surface-muted/60 text-text-muted hover:text-foreground cursor-default transition-colors"
-            title="BulkMailer Queue Active • SQLite + Nodemailer"
+            title="BulkMailer Queue Active • Supabase + Nodemailer"
           >
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
@@ -138,7 +138,7 @@ export const Sidebar = ({
               </span>
             </div>
             <p className="text-[10px] text-text-muted leading-tight">
-              Local SQLite + Gmail SMTP
+              Supabase PostgreSQL + Gmail SMTP
             </p>
           </div>
         )}

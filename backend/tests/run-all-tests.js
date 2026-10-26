@@ -9,7 +9,7 @@ const runScript = (scriptName) => {
 
     const child = spawn('node', [path.join(__dirname, scriptName)], {
       stdio: 'inherit',
-      env: { ...process.env, DB_PATH: './data/bulkmailer_test.db' }
+      env: process.env
     });
 
     child.on('close', (code) => {
@@ -43,7 +43,7 @@ async function main() {
   console.log(`==============================================\n`);
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error('\nTest suite execution failed:', err);
   process.exit(1);
 });
