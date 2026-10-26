@@ -2,7 +2,10 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-const uploadsDir = process.env.UPLOADS_DIR || path.resolve(__dirname, '../../uploads');
+const defaultUploadsDir = process.env.VERCEL
+  ? '/tmp/uploads'
+  : path.resolve(__dirname, '../../uploads');
+const uploadsDir = process.env.UPLOADS_DIR || defaultUploadsDir;
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
