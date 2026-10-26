@@ -1,0 +1,58 @@
+# Dependency directories
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Environment files and credentials (CRITICAL - NEVER COMMIT)
+.env
+.env.*
+*.env
+*.env.local
+*.env.production
+backend/.env
+backend/.env.*
+frontend/.env
+frontend/.env.*
+!.env.example
+!*/.env.example
+serviceAccountKey.json
+*serviceAccountKey*.json
+*firebase-adminsdk*.json
+*.pem
+*.key
+*.cert
+
+# Database and SQLite data
+data/
+backend/data/*.db
+backend/data/*.db-wal
+backend/data/*.db-shm
+backend/data/*.db-journal
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads directory
+backend/uploads/*
+uploads/*
+!backend/uploads/.gitkeep
+
+# Production builds
+dist/
+frontend/dist/
+build/
+
+# Logs and system artifacts
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+
+# Cloud & Editor temporary directories
+.vercel
+.railway
+.render
+.idea/
+.vscode/

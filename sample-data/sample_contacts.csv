@@ -1,0 +1,6 @@
+email,name,order_id,attachment
+alice.wonderland@example.com,Alice Wonderland,ORD-1001,invoice_1001.pdf
+bob.builder@example.com,Bob Builder,ORD-1002,invoice_1002.pdf
+charlie.brown@example.com,Charlie Brown,ORD-1003,invoice_1003.pdf
+diana.prince@example.com,Diana Prince,ORD-1004,invoice_1004.pdf
+edward.norton@example.com,,ORD-1005,invoice_1005.pdf
