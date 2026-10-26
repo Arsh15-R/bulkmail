@@ -5,6 +5,7 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
+    "build": "node -e \"console.log('Backend ready')\"",
     "dev": "node --watch src/server.js",
     "test": "node tests/run-all-tests.js"
   },
