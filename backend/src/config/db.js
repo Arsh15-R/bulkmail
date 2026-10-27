@@ -43,7 +43,7 @@ if (connectionString) {
   );
 }
 
-// Convert standard '?' placeholders to PostgreSQL '$1, $2, ...' and SQLite compatibility functions
+// Convert standard '?' placeholders to PostgreSQL '$1, $2, ...' for Supabase PostgreSQL
 const convertPlaceholders = (sql) => {
   let index = 1;
   let pgSql = sql
