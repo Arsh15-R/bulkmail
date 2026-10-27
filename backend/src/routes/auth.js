@@ -6,6 +6,8 @@ const { loginLimiter, signupLimiter } = require('../middleware/rateLimiter');
 
 router.post('/signup', signupLimiter, authController.signup);
 router.post('/login', loginLimiter, authController.login);
+router.post('/google', loginLimiter, authController.googleAuth);
+router.get('/google/client-id', authController.getGoogleClientId);
 router.get('/me', authenticateToken, authController.getMe);
 router.put('/settings', authenticateToken, authController.updateSettings);
 router.put('/change-password', authenticateToken, authController.changePassword);

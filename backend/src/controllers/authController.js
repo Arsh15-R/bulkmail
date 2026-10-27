@@ -224,10 +224,157 @@ const changePassword = async (req, res) => {
   }
 };
 
+/**
+ * Public endpoint to get configured Google Client ID for GIS frontend initialization.
+ */
+const getGoogleClientId = (req, res) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || null;
+  return res.json({
+    success: true,
+    clientId,
+    isConfigured: !!clientId
+  });
+};
+
+/**
+ * Google OAuth Authentication handler.
+ * Verifies ID token or access token and logs in/registers user.
+ */
+const googleAuth = async (req, res) => {
+  try {
+    const { credential, accessToken } = req.body;
+
+    if (!credential && !accessToken) {
+      return res.status(400).json({
+        success: false,
+        error: 'Google authentication credential or access token is required.'
+      });
+    }
+
+    let email = '';
+    let name = '';
+    let googleId = '';
+    let avatarUrl = null;
+
+    if (credential) {
+      // Verify Google ID token using Google tokeninfo API
+      const verifyRes = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`
+      );
+
+      if (!verifyRes.ok) {
+        const errText = await verifyRes.text();
+        console.warn('Google token verification failed:', errText);
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid or expired Google authentication token.'
+        });
+      }
+
+      const payload = await verifyRes.json();
+
+      if (!payload.email || (payload.email_verified !== 'true' && payload.email_verified !== true)) {
+        return res.status(401).json({
+          success: false,
+          error: 'Unverified Google email address. Please use a verified Google account.'
+        });
+      }
+
+      email = payload.email.toLowerCase().trim();
+      name = (payload.name || payload.given_name || email.split('@')[0]).trim();
+      googleId = payload.sub;
+      avatarUrl = payload.picture || null;
+    } else if (accessToken) {
+      // Verify Google OAuth2 access token
+      const userinfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+
+      if (!userinfoRes.ok) {
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid Google OAuth access token.'
+        });
+      }
+
+      const payload = await userinfoRes.json();
+      if (!payload.email) {
+        return res.status(401).json({
+          success: false,
+          error: 'No email found in Google account profile.'
+        });
+      }
+
+      email = payload.email.toLowerCase().trim();
+      name = (payload.name || payload.given_name || email.split('@')[0]).trim();
+      googleId = payload.sub;
+      avatarUrl = payload.picture || null;
+    }
+
+    // Find or Create User in Supabase PostgreSQL
+    let user = await get('SELECT * FROM users WHERE email = ?', [email]);
+
+    if (user) {
+      await run(
+        `UPDATE users 
+         SET google_id = COALESCE(google_id, ?), 
+             avatar_url = COALESCE(avatar_url, ?),
+             auth_provider = CASE WHEN auth_provider = 'local' THEN 'google_linked' ELSE auth_provider END,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = ?`,
+        [googleId, avatarUrl, user.id]
+      );
+      user = await get('SELECT * FROM users WHERE id = ?', [user.id]);
+    } else {
+      const insertResult = await run(
+        `INSERT INTO users (name, email, password_hash, google_id, avatar_url, auth_provider, daily_send_limit, dark_mode) 
+         VALUES (?, ?, NULL, ?, ?, 'google', 500, 0)`,
+        [name, email, googleId, avatarUrl]
+      );
+      user = await get('SELECT * FROM users WHERE id = ?', [insertResult.lastID]);
+    }
+
+    // Calculate today's sent quota
+    const today = new Date().toISOString().split('T')[0];
+    const log = await get('SELECT count FROM daily_send_logs WHERE user_id = ? AND date = ?', [
+      user.id,
+      today
+    ]);
+    const sentToday = log ? Number(log.count) : 0;
+    const dailyLimit = user.daily_send_limit || 500;
+
+    const safeUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar_url: user.avatar_url || avatarUrl,
+      auth_provider: user.auth_provider || 'google',
+      daily_send_limit: dailyLimit,
+      dark_mode: user.dark_mode || 0,
+      sent_today: sentToday,
+      remaining_today: Math.max(0, dailyLimit - sentToday)
+    };
+
+    const token = generateToken(safeUser);
+
+    return res.json({
+      success: true,
+      message: 'Google login successful.',
+      token,
+      user: safeUser
+    });
+  } catch (err) {
+    console.error('googleAuth error:', err);
+    return res.status(500).json({ success: false, error: 'Internal server error during Google authentication.' });
+  }
+};
+
 module.exports = {
   signup,
   login,
   getMe,
   updateSettings,
-  changePassword
+  changePassword,
+  getGoogleClientId,
+  googleAuth
 };

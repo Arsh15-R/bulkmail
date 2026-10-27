@@ -157,9 +157,18 @@ export const Navbar = ({
             onClick={() => setIsUserMenuOpen(prev => !prev)}
             className="flex items-center space-x-2 pl-1.5 pr-2 py-1 rounded-control hover:bg-surface-muted transition-colors border border-transparent hover:border-border text-left"
           >
-            <div className="w-7 h-7 rounded-pill bg-accent/15 text-accent-strong font-display font-semibold text-xs flex items-center justify-center border border-accent/25">
-              {initials}
-            </div>
+            {user?.avatar_url ? (
+              <img
+                src={user.avatar_url}
+                alt={user.name || 'User'}
+                className="w-7 h-7 rounded-pill border border-border object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="w-7 h-7 rounded-pill bg-accent/15 text-accent-strong font-display font-semibold text-xs flex items-center justify-center border border-accent/25">
+                {initials}
+              </div>
+            )}
             <div className="hidden lg:block text-left">
               <div className="text-xs font-semibold text-foreground leading-tight truncate max-w-[120px]">
                 {user?.name || 'Sender'}

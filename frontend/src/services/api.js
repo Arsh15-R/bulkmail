@@ -48,6 +48,19 @@ export const api = {
       });
       return handleResponse(res);
     },
+    googleLogin: async (payload) => {
+      const body = typeof payload === 'string' ? { credential: payload } : payload;
+      const res = await fetch(`${API_BASE}/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      return handleResponse(res);
+    },
+    getGoogleClientId: async () => {
+      const res = await fetch(`${API_BASE}/auth/google/client-id`);
+      return handleResponse(res);
+    },
     me: async () => {
       const res = await fetch(`${API_BASE}/auth/me`, {
         headers: getHeaders()

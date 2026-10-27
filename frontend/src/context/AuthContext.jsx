@@ -87,6 +87,19 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const googleLogin = async (payload) => {
+    const data = await api.auth.googleLogin(payload);
+    if (data.success && data.token) {
+      localStorage.setItem('bm_token', data.token);
+      setToken(data.token);
+      setUser(data.user);
+      if (data.user.dark_mode !== undefined) {
+        setTheme(data.user.dark_mode === 1);
+      }
+      return data.user;
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('bm_token');
     setToken(null);
@@ -113,6 +126,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!token && !!user,
         login,
         signup,
+        googleLogin,
         logout,
         refreshUser: fetchProfile,
         updateUserSettings

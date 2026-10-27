@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
+import { GoogleLoginButton } from '../components/GoogleLoginButton';
 import { Mail, Lock, ArrowRight, AlertCircle, Shield, Sparkles } from 'lucide-react';
 
 export const Login = ({ onSwitchToSignup }) => {
@@ -50,6 +51,21 @@ export const Login = ({ onSwitchToSignup }) => {
             <span>{error}</span>
           </div>
         )}
+
+        {/* Google Sign In */}
+        <div className="space-y-3">
+          <GoogleLoginButton
+            text="Continue with Google"
+            onError={(msg) => setError(msg)}
+          />
+
+          <div className="relative flex items-center justify-center pt-1 pb-1">
+            <div className="w-full border-t border-border-subtle" />
+            <span className="bg-surface px-2.5 text-[10px] font-semibold uppercase tracking-wider text-text-muted absolute">
+              Or continue with email
+            </span>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div>
