@@ -26,6 +26,9 @@
   2. **Single Recipient:** Fast 1-on-1 personalized outreach with full tracking and formatting.
   3. **Mail Merge CSV:** Upload a CSV spreadsheet, auto-detect columns, and dynamically personalize content per recipient with custom fallback variables (e.g. `{{name|valued customer}}`, `{{invoice_id}}`).
   4. **Custom Table Mode:** Interactive spreadsheet grid editor to construct recipient tables and custom merge fields directly in your browser.
+- **Google OAuth 2.0 & One-Click Sign-In:** Authenticate with Google Identity Services (GIS) or standard email/password, with automatic profile sync and Google avatar support.
+- **Real-Time Quota Telemetry Meter:** Interactive live meter tracking daily sends against your 500 email quota, synchronized automatically on send and window focus.
+- **Mail Record Deletion & Cascade Cleanup:** Delete individual recipient logs or entire campaign dispatches with automatic cascading cleanup of all tracking events and tokens, plus bulk delete capabilities.
 - **Dynamic Mail Merge & Fallbacks:** Inject any custom variable `{{key}}` with default fallbacks `{{key|fallback}}` that automatically populate across subjects and bodies.
 - **Rich Visual & Code Editor:** Three-tab editor supporting Visual WYSIWYG, HTML source code, and Plain-Text with interactive variable chips.
 - **Email Templates Library:** Save, duplicate, preview, and reuse modular email templates with pre-defined subject lines and placeholders.
@@ -152,6 +155,8 @@ npm run dev:frontend
 | `EMAIL_FROM` | Default sender header formatted as `"Name" <email>` | `"BulkMailer" <user@gmail.com>` | Yes |
 | `DELAY_BETWEEN_EMAILS_MS` | Milliseconds between individual email sends in queue | `500` | No |
 | `DAILY_SEND_LIMIT` | Maximum emails per 24 hours per user | `500` | No |
+| `GOOGLE_CLIENT_ID` | Google OAuth 2.0 Client ID for Google Sign-In | `xxxx.apps.googleusercontent.com` | Optional |
+| `VITE_GOOGLE_CLIENT_ID` | *(Frontend only)* Google Client ID if built statically | `xxxx.apps.googleusercontent.com` | Optional |
 | `VITE_API_URL` | *(Frontend only)* Backend URL if frontend is deployed on separate domain | `http://localhost:5000` | If split |
 
 ---
