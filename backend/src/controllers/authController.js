@@ -37,6 +37,8 @@ const signup = async (req, res) => {
       id: result.lastID,
       name: name.trim(),
       email: cleanEmail,
+      auth_provider: 'local',
+      avatar_url: null,
       daily_send_limit: 500,
       dark_mode: 0,
       sent_today: 0,
@@ -89,6 +91,8 @@ const login = async (req, res) => {
       id: user.id,
       name: user.name,
       email: user.email,
+      auth_provider: user.auth_provider || 'local',
+      avatar_url: user.avatar_url || null,
       daily_send_limit: dailyLimit,
       dark_mode: user.dark_mode,
       sent_today: sentToday,
@@ -112,7 +116,7 @@ const login = async (req, res) => {
 const getMe = async (req, res) => {
   try {
     const user = await get(
-      'SELECT id, name, email, daily_send_limit, dark_mode, created_at FROM users WHERE id = ?',
+      'SELECT id, name, email, auth_provider, avatar_url, daily_send_limit, dark_mode, created_at FROM users WHERE id = ?',
       [req.user.id]
     );
 
@@ -133,6 +137,7 @@ const getMe = async (req, res) => {
       success: true,
       user: {
         ...user,
+        auth_provider: user.auth_provider || 'local',
         daily_send_limit: dailyLimit,
         sent_today: sentToday,
         remaining_today: Math.max(0, dailyLimit - sentToday)
@@ -175,7 +180,7 @@ const updateSettings = async (req, res) => {
     await run(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, params);
 
     const updatedUser = await get(
-      'SELECT id, name, email, daily_send_limit, dark_mode FROM users WHERE id = ?',
+      'SELECT id, name, email, auth_provider, avatar_url, daily_send_limit, dark_mode FROM users WHERE id = ?',
       [req.user.id]
     );
 
@@ -194,17 +199,31 @@ const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
-    if (!currentPassword || !newPassword || typeof newPassword !== 'string') {
-      return res.status(400).json({ success: false, error: 'Both current and new password are required.' });
-    }
-
-    if (newPassword.length < 6 || newPassword.length > 72) {
+    if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 6 || newPassword.length > 72) {
       return res.status(400).json({ success: false, error: 'New password must be between 6 and 72 characters long.' });
     }
 
     const user = await get('SELECT password_hash FROM users WHERE id = ?', [req.user.id]);
-    const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found.' });
+    }
 
+    // If account was created via Google SSO with no password yet
+    if (!user.password_hash) {
+      const salt = await bcrypt.genSalt(10);
+      const newHash = await bcrypt.hash(newPassword, salt);
+      await run('UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [
+        newHash,
+        req.user.id
+      ]);
+      return res.json({ success: true, message: 'Password set successfully.' });
+    }
+
+    if (!currentPassword || typeof currentPassword !== 'string') {
+      return res.status(400).json({ success: false, error: 'Current password is required.' });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
     if (!isMatch) {
       return res.status(400).json({ success: false, error: 'Incorrect current password.' });
     }

@@ -36,6 +36,7 @@ export const Groups = ({ onSendToGroup }) => {
   const [groupMembers, setGroupMembers] = useState([]);
   const [allContacts, setAllContacts] = useState([]);
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
+  const [loadingMembers, setLoadingMembers] = useState(false);
   const [memberSearch, setMemberSearch] = useState('');
   const [addContactSearch, setAddContactSearch] = useState('');
   const [activeMemberTab, setActiveMemberTab] = useState('current'); // 'current' or 'add'
@@ -114,6 +115,8 @@ export const Groups = ({ onSendToGroup }) => {
     setActiveMemberTab('current');
     setMemberSearch('');
     setAddContactSearch('');
+    setGroupMembers([]);
+    setLoadingMembers(true);
     try {
       const [grpRes, contRes] = await Promise.all([
         api.groups.get(group.id),
@@ -123,6 +126,8 @@ export const Groups = ({ onSendToGroup }) => {
       if (contRes.success) setAllContacts(contRes.contacts || []);
     } catch (err) {
       showToast(err.message, 'error');
+    } finally {
+      setLoadingMembers(false);
     }
   };
 
@@ -495,7 +500,12 @@ export const Groups = ({ onSendToGroup }) => {
                     </div>
 
                     <div className="border border-border rounded-control divide-y divide-border-subtle max-h-72 overflow-y-auto">
-                      {groupMembers.length === 0 ? (
+                      {loadingMembers ? (
+                        <div className="p-8 text-center text-text-muted flex items-center justify-center space-x-2">
+                          <span className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                          <span>Loading group members...</span>
+                        </div>
+                      ) : groupMembers.length === 0 ? (
                         <div className="p-8 text-center text-text-muted italic">
                           No contacts in this group yet. Switch to "Add Contacts" tab to add some.
                         </div>

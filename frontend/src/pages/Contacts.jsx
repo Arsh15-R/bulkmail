@@ -27,6 +27,7 @@ import {
 export const Contacts = ({ onSendToContacts }) => {
   const [contacts, setContacts] = useState([]);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, total: 0, totalPages: 1 });
@@ -51,7 +52,7 @@ export const Contacts = ({ onSendToContacts }) => {
     setLoading(true);
     try {
       const res = await api.contacts.list({
-        search,
+        search: debouncedSearch,
         status: statusFilter,
         page,
         limit: 25
@@ -68,9 +69,16 @@ export const Contacts = ({ onSendToContacts }) => {
   };
 
   useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  useEffect(() => {
     loadContacts(1);
     setSelectedIds([]);
-  }, [search, statusFilter]);
+  }, [debouncedSearch, statusFilter]);
 
   const handleOpenAdd = () => {
     setEditingContact(null);
@@ -166,7 +174,7 @@ export const Contacts = ({ onSendToContacts }) => {
   };
 
   const handleCsvImport = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
     Papa.parse(file, {
@@ -181,7 +189,13 @@ export const Contacts = ({ onSendToContacts }) => {
           }
         } catch (err) {
           showToast(`Import failed: ${err.message}`, 'error');
+        } finally {
+          e.target.value = '';
         }
+      },
+      error: (err) => {
+        showToast(`CSV parsing error: ${err.message}`, 'error');
+        e.target.value = '';
       }
     });
   };

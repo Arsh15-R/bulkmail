@@ -49,7 +49,18 @@ export const Scheduled = () => {
 
   const handleOpenEdit = (job) => {
     setEditingJob(job);
-    setNewRunAt(new Date(job.run_at).toISOString().slice(0, 16));
+    try {
+      const d = new Date(job.run_at);
+      if (!isNaN(d.getTime())) {
+        const offset = d.getTimezoneOffset() * 60000;
+        const localISOTime = new Date(d.getTime() - offset).toISOString().slice(0, 16);
+        setNewRunAt(localISOTime);
+      } else {
+        setNewRunAt('');
+      }
+    } catch {
+      setNewRunAt('');
+    }
   };
 
   const handleSaveEdit = async (e) => {

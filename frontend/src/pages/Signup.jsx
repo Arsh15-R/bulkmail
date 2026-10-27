@@ -84,6 +84,7 @@ export const Signup = ({ onSwitchToLogin }) => {
               <input
                 type="text"
                 required
+                autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Jane Doe or Acme Corp"
@@ -101,6 +102,7 @@ export const Signup = ({ onSwitchToLogin }) => {
               <input
                 type="email"
                 required
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="jane@company.com"
@@ -119,6 +121,7 @@ export const Signup = ({ onSwitchToLogin }) => {
                 type="password"
                 required
                 minLength={6}
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
