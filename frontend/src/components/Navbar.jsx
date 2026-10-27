@@ -14,7 +14,8 @@ import {
   ChevronDown,
   User,
   ShieldCheck,
-  Zap
+  Zap,
+  RotateCcw
 } from 'lucide-react';
 
 export const Navbar = ({
@@ -22,9 +23,20 @@ export const Navbar = ({
   onToggleSidebar,
   onToggleMobileNav
 }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isRefreshingQuota, setIsRefreshingQuota] = useState(false);
+
+  const handleRefreshQuota = async (e) => {
+    if (e) e.stopPropagation();
+    setIsRefreshingQuota(true);
+    try {
+      if (refreshUser) await refreshUser();
+    } finally {
+      setTimeout(() => setIsRefreshingQuota(false), 500);
+    }
+  };
 
   const sentToday = user?.sent_today || 0;
   const dailyLimit = user?.daily_send_limit || 500;
@@ -91,12 +103,18 @@ export const Navbar = ({
       <div className="flex items-center space-x-2 sm:space-x-3">
         {/* Daily Quota Meter */}
         <div
-          className="hidden sm:flex items-center space-x-3 bg-surface-muted px-3 py-1.5 rounded-panel border border-border-subtle"
-          title={`${remainingToday} emails remaining today. Resets at midnight UTC.`}
+          onClick={handleRefreshQuota}
+          className="hidden sm:flex items-center space-x-3 bg-surface-muted hover:bg-surface-raised px-3 py-1.5 rounded-panel border border-border-subtle hover:border-border transition-colors cursor-pointer group"
+          title={`${remainingToday} emails remaining today. Click to refresh live quota. Resets at midnight UTC.`}
         >
           <div className="text-right">
-            <div className="text-[10px] uppercase font-semibold tracking-wider text-text-muted">
-              Daily Quota
+            <div className="text-[10px] uppercase font-semibold tracking-wider text-text-muted flex items-center justify-end space-x-1">
+              <span>Daily Quota</span>
+              <RotateCcw
+                className={`w-2.5 h-2.5 text-text-muted group-hover:text-accent transition-transform duration-500 ${
+                  isRefreshingQuota ? 'animate-spin text-accent' : ''
+                }`}
+              />
             </div>
             <div className="text-xs font-semibold text-foreground">
               {sentToday}{' '}

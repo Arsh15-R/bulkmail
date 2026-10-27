@@ -38,7 +38,9 @@ const signup = async (req, res) => {
       name: name.trim(),
       email: cleanEmail,
       daily_send_limit: 500,
-      dark_mode: 0
+      dark_mode: 0,
+      sent_today: 0,
+      remaining_today: 500
     };
 
     const token = generateToken(user);
@@ -75,12 +77,22 @@ const login = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Invalid email or password.' });
     }
 
+    const today = new Date().toISOString().split('T')[0];
+    const log = await get('SELECT count FROM daily_send_logs WHERE user_id = ? AND date = ?', [
+      user.id,
+      today
+    ]);
+    const sentToday = log ? Number(log.count) : 0;
+    const dailyLimit = user.daily_send_limit || 500;
+
     const safeUser = {
       id: user.id,
       name: user.name,
       email: user.email,
-      daily_send_limit: user.daily_send_limit,
-      dark_mode: user.dark_mode
+      daily_send_limit: dailyLimit,
+      dark_mode: user.dark_mode,
+      sent_today: sentToday,
+      remaining_today: Math.max(0, dailyLimit - sentToday)
     };
 
     const token = generateToken(safeUser);
@@ -114,14 +126,16 @@ const getMe = async (req, res) => {
       req.user.id,
       today
     ]);
-    const sentToday = log ? log.count : 0;
+    const sentToday = log ? Number(log.count) : 0;
+    const dailyLimit = user.daily_send_limit || 500;
 
     return res.json({
       success: true,
       user: {
         ...user,
+        daily_send_limit: dailyLimit,
         sent_today: sentToday,
-        remaining_today: Math.max(0, user.daily_send_limit - sentToday)
+        remaining_today: Math.max(0, dailyLimit - sentToday)
       }
     });
   } catch (err) {

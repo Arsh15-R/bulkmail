@@ -197,9 +197,120 @@ const exportCampaignCsv = async (req, res) => {
   }
 };
 
+const deleteCampaign = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+
+    const campaign = await get('SELECT id, title FROM campaigns WHERE id = ? AND user_id = ?', [id, userId]);
+    if (!campaign) {
+      return res.status(404).json({ success: false, error: 'Campaign not found or access denied.' });
+    }
+
+    // Cascade delete in PostgreSQL takes care of campaign_recipients, tracking_events, etc.
+    await run('DELETE FROM campaigns WHERE id = ? AND user_id = ?', [id, userId]);
+
+    return res.json({
+      success: true,
+      message: `Campaign #${id} and associated mail records deleted successfully.`
+    });
+  } catch (err) {
+    console.error('deleteCampaign error:', err);
+    return res.status(500).json({ success: false, error: 'Failed to delete campaign.' });
+  }
+};
+
+const deleteRecipient = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { recipientId } = req.params;
+
+    const recipient = await get(
+      `SELECT cr.id, cr.campaign_id, cr.status 
+       FROM campaign_recipients cr 
+       JOIN campaigns c ON cr.campaign_id = c.id 
+       WHERE cr.id = ? AND c.user_id = ?`,
+      [recipientId, userId]
+    );
+
+    if (!recipient) {
+      return res.status(404).json({ success: false, error: 'Recipient mail record not found or access denied.' });
+    }
+
+    await run('DELETE FROM campaign_recipients WHERE id = ?', [recipientId]);
+
+    const campaignId = recipient.campaign_id;
+    const counts = await get(
+      `SELECT 
+         COUNT(*) as total,
+         SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) as sent,
+         SUM(CASE WHEN status IN ('failed', 'bounced') THEN 1 ELSE 0 END) as failed,
+         SUM(CASE WHEN status = 'skipped' THEN 1 ELSE 0 END) as skipped
+       FROM campaign_recipients WHERE campaign_id = ?`,
+      [campaignId]
+    );
+
+    await run(
+      `UPDATE campaigns SET 
+         total_recipients = ?, 
+         sent_count = ?, 
+         failed_count = ?, 
+         skipped_count = ? 
+       WHERE id = ?`,
+      [
+        Number(counts.total || 0),
+        Number(counts.sent || 0),
+        Number(counts.failed || 0),
+        Number(counts.skipped || 0),
+        campaignId
+      ]
+    );
+
+    return res.json({
+      success: true,
+      message: 'Recipient mail record deleted successfully.'
+    });
+  } catch (err) {
+    console.error('deleteRecipient error:', err);
+    return res.status(500).json({ success: false, error: 'Failed to delete recipient mail record.' });
+  }
+};
+
+const bulkDeleteCampaigns = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { ids } = req.body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, error: 'Campaign IDs array is required.' });
+    }
+
+    const validIds = ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id) && id > 0);
+    if (validIds.length === 0) {
+      return res.status(400).json({ success: false, error: 'No valid campaign IDs provided.' });
+    }
+
+    for (const id of validIds) {
+      await run('DELETE FROM campaigns WHERE id = ? AND user_id = ?', [id, userId]);
+    }
+
+    return res.json({
+      success: true,
+      message: `Successfully deleted ${validIds.length} campaign(s).`,
+      deletedCount: validIds.length
+    });
+  } catch (err) {
+    console.error('bulkDeleteCampaigns error:', err);
+    return res.status(500).json({ success: false, error: 'Failed to delete campaigns.' });
+  }
+};
+
 module.exports = {
   getCampaigns,
   getCampaignById,
   retryFailedRecipients,
-  exportCampaignCsv
+  exportCampaignCsv,
+  deleteCampaign,
+  deleteRecipient,
+  bulkDeleteCampaigns
 };

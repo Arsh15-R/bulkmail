@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 
 export const Compose = ({ onNavigateToHistory }) => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
 
   // Mode: 'same', 'single', 'merge', 'custom'
   const [mode, setMode] = useState('same');
@@ -473,6 +473,8 @@ export const Compose = ({ onNavigateToHistory }) => {
       });
       if (res.success) {
         showToast(res.message);
+        if (refreshUser) refreshUser();
+        window.dispatchEvent(new Event('bm_quota_updated'));
       }
     } catch (err) {
       showToast(`Test failed: ${err.message}`, 'error');
@@ -1415,9 +1417,15 @@ export const Compose = ({ onNavigateToHistory }) => {
         campaignId={activeCampaignId}
         totalRecipients={activeCampaignTotal}
         isDryRun={isDryRun}
-        onComplete={() => setIsProgressModalOpen(false)}
+        onComplete={() => {
+          setIsProgressModalOpen(false);
+          if (refreshUser) refreshUser();
+          window.dispatchEvent(new Event('bm_quota_updated'));
+        }}
         onViewHistory={() => {
           setIsProgressModalOpen(false);
+          if (refreshUser) refreshUser();
+          window.dispatchEvent(new Event('bm_quota_updated'));
           if (onNavigateToHistory) onNavigateToHistory('history');
         }}
       />

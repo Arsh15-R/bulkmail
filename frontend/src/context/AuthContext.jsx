@@ -39,8 +39,29 @@ export const AuthProvider = ({ children }) => {
       setToken(null);
     };
 
+    const handleQuotaRefresh = () => {
+      if (localStorage.getItem('bm_token')) {
+        fetchProfile();
+      }
+    };
+
     window.addEventListener('bm_auth_logout', handleAuthLogout);
-    return () => window.removeEventListener('bm_auth_logout', handleAuthLogout);
+    window.addEventListener('bm_quota_updated', handleQuotaRefresh);
+    window.addEventListener('focus', handleQuotaRefresh);
+
+    // Periodic quota synchronization every 30 seconds
+    const interval = setInterval(() => {
+      if (localStorage.getItem('bm_token')) {
+        fetchProfile();
+      }
+    }, 30000);
+
+    return () => {
+      window.removeEventListener('bm_auth_logout', handleAuthLogout);
+      window.removeEventListener('bm_quota_updated', handleQuotaRefresh);
+      window.removeEventListener('focus', handleQuotaRefresh);
+      clearInterval(interval);
+    };
   }, [token]);
 
   const login = async (email, password) => {

@@ -49,6 +49,7 @@ export const SendProgressModal = ({
 
         if (data.status === 'sent') {
           setSentCount(c => c + 1);
+          window.dispatchEvent(new Event('bm_quota_updated'));
         } else if (data.status === 'failed' || data.status === 'bounced') {
           setFailedCount(c => c + 1);
         } else if (data.status === 'skipped') {
@@ -62,15 +63,18 @@ export const SendProgressModal = ({
     eventSource.addEventListener('completed', () => {
       setIsCompleted(true);
       eventSource.close();
+      window.dispatchEvent(new Event('bm_quota_updated'));
       if (onComplete) onComplete();
     });
 
     eventSource.onerror = () => {
       eventSource.close();
+      window.dispatchEvent(new Event('bm_quota_updated'));
     };
 
     return () => {
       eventSource.close();
+      window.dispatchEvent(new Event('bm_quota_updated'));
     };
   }, [isOpen, campaignId]);
 

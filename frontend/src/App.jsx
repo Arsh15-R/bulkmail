@@ -25,6 +25,10 @@ export function App() {
     localStorage.setItem('bm_sidebar_collapsed', isSidebarCollapsed ? 'true' : 'false');
   }, [isSidebarCollapsed]);
 
+  useEffect(() => {
+    window.dispatchEvent(new Event('bm_quota_updated'));
+  }, [activeTab]);
+
   const toggleSidebar = () => {
     setIsSidebarCollapsed(prev => !prev);
   };

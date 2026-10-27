@@ -343,9 +343,25 @@ const sendTestEmail = async (req, res) => {
       text: body_text
     });
 
+    // Increment daily send log for this test dispatch
+    const today = new Date().toISOString().split('T')[0];
+    await run(
+      `INSERT INTO daily_send_logs (user_id, date, count) 
+       VALUES (?, ?, 1) 
+       ON CONFLICT(user_id, date) DO UPDATE SET count = daily_send_logs.count + 1`,
+      [req.user.id, today]
+    );
+
+    const log = await get('SELECT count FROM daily_send_logs WHERE user_id = ? AND date = ?', [
+      req.user.id,
+      today
+    ]);
+    const sentToday = log ? Number(log.count) : 1;
+
     return res.json({
       success: true,
-      message: `Test email successfully sent to ${userEmail}.`
+      message: `Test email successfully sent to ${userEmail}.`,
+      sentToday
     });
   } catch (err) {
     console.error('sendTestEmail error:', err);

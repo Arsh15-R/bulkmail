@@ -271,6 +271,28 @@ export const api = {
       });
       return handleResponse(res);
     },
+    delete: async (id) => {
+      const res = await fetch(`${API_BASE}/history/${id}`, {
+        method: 'DELETE',
+        headers: getHeaders()
+      });
+      return handleResponse(res);
+    },
+    deleteRecipient: async (recipientId) => {
+      const res = await fetch(`${API_BASE}/history/recipient/${recipientId}`, {
+        method: 'DELETE',
+        headers: getHeaders()
+      });
+      return handleResponse(res);
+    },
+    bulkDelete: async (ids) => {
+      const res = await fetch(`${API_BASE}/history/bulk-delete`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ ids })
+      });
+      return handleResponse(res);
+    },
     exportCsvUrl: (id) => {
       const token = localStorage.getItem('bm_token');
       return `${API_BASE}/history/${id}/export?token=${token}`;

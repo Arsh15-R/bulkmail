@@ -18,13 +18,18 @@ import {
   Activity,
   Layers,
   Sparkles,
-  BarChart3
+  BarChart3,
+  Trash2,
+  Check
 } from 'lucide-react';
 
 export const History = () => {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, total: 0, totalPages: 1 });
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Detail Modal / Drawer
   const [selectedCampaign, setSelectedCampaign] = useState(null);
@@ -95,6 +100,87 @@ export const History = () => {
     showToast('Downloading campaign CSV export...');
   };
 
+  const handleDeleteCampaign = async (campaignId) => {
+    setIsDeleting(true);
+    try {
+      const res = await api.history.delete(campaignId);
+      if (res.success) {
+        showToast('Mail campaign deleted successfully.');
+        setDeleteConfirm(null);
+        if (selectedCampaign && selectedCampaign.id === campaignId) {
+          setIsDetailOpen(false);
+          setSelectedCampaign(null);
+        }
+        setSelectedIds(prev => prev.filter(id => id !== campaignId));
+        window.dispatchEvent(new Event('bm_quota_updated'));
+        loadHistory(pagination.page);
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to delete campaign.', 'error');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setIsDeleting(true);
+    try {
+      const res = await api.history.bulkDelete(selectedIds);
+      if (res.success) {
+        showToast(`Deleted ${selectedIds.length} mail campaign(s).`);
+        setDeleteConfirm(null);
+        setSelectedIds([]);
+        window.dispatchEvent(new Event('bm_quota_updated'));
+        loadHistory(1);
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to delete campaigns.', 'error');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteRecipient = async (recipientId) => {
+    setIsDeleting(true);
+    try {
+      const res = await api.history.deleteRecipient(recipientId);
+      if (res.success) {
+        showToast('Recipient mail record deleted.');
+        setDeleteConfirm(null);
+        setCampaignRecipients(prev => prev.filter(r => r.id !== recipientId));
+        if (selectedCampaign) {
+          const updated = await api.history.get(selectedCampaign.id);
+          if (updated.success) {
+            setSelectedCampaign(updated.campaign);
+          }
+        }
+        window.dispatchEvent(new Event('bm_quota_updated'));
+        loadHistory(pagination.page);
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to delete recipient.', 'error');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (campaigns.length === 0) return;
+    if (selectedIds.length === campaigns.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(campaigns.map(c => c.id));
+    }
+  };
+
+  const toggleSelectOne = (id, e) => {
+    if (e) e.stopPropagation();
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
   return (
     <div className="space-y-5">
       {/* Toast Notification */}
@@ -145,12 +231,48 @@ export const History = () => {
         </button>
       </div>
 
+      {/* Bulk Action Toolbar */}
+      {selectedIds.length > 0 && (
+        <div className="bg-surface-raised border border-border px-4 py-2.5 rounded-panel flex items-center justify-between shadow-xs">
+          <div className="text-xs font-semibold text-foreground flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-accent" />
+            <span>
+              {selectedIds.length} mail campaign{selectedIds.length > 1 ? 's' : ''} selected
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setSelectedIds([])}
+              className="px-2.5 py-1 text-xs text-text-muted hover:text-foreground transition cursor-pointer"
+            >
+              Clear Selection
+            </button>
+            <button
+              onClick={() => setDeleteConfirm({ type: 'bulk', count: selectedIds.length })}
+              className="px-3 py-1.5 rounded-control text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white shadow-xs flex items-center space-x-1.5 transition cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete Selected ({selectedIds.length})</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Campaign Logs Table */}
       <div className="bg-surface rounded-panel border border-border overflow-hidden shadow-resting">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-surface-muted border-b border-border text-text-muted font-mono uppercase text-[10px] tracking-wider">
               <tr>
+                <th className="p-3.5 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    aria-label="Select all campaigns"
+                    checked={campaigns.length > 0 && selectedIds.length === campaigns.length}
+                    onChange={toggleSelectAll}
+                    className="rounded border-border text-accent focus:ring-accent cursor-pointer"
+                  />
+                </th>
                 <th className="p-3.5">Campaign Title & Subject</th>
                 <th className="p-3.5">Mode</th>
                 <th className="p-3.5">Delivery Stats</th>
@@ -162,7 +284,7 @@ export const History = () => {
             <tbody className="divide-y divide-border-subtle">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="p-10 text-center text-text-muted italic">
+                  <td colSpan={7} className="p-10 text-center text-text-muted italic">
                     <div className="flex flex-col items-center space-y-2">
                       <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-pill animate-spin" />
                       <span className="text-xs">Loading campaign audit logs...</span>
@@ -171,7 +293,7 @@ export const History = () => {
                 </tr>
               ) : campaigns.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-12 text-center text-text-muted space-y-3">
+                  <td colSpan={7} className="p-12 text-center text-text-muted space-y-3">
                     <div className="w-12 h-12 rounded-pill bg-surface-muted border border-border flex items-center justify-center mx-auto text-text-muted">
                       <Clock className="w-6 h-6 opacity-40" />
                     </div>
@@ -187,12 +309,26 @@ export const History = () => {
                 campaigns.map((camp) => {
                   const sentRate = camp.total_recipients > 0 ? Math.round((camp.sent_count / camp.total_recipients) * 100) : 0;
                   const openRate = camp.sent_count > 0 ? Math.round((camp.open_count / camp.sent_count) * 100) : 0;
+                  const isSelected = selectedIds.includes(camp.id);
                   return (
                     <tr
                       key={camp.id}
                       onClick={() => handleOpenDetail(camp)}
-                      className="transition-colors hover:bg-surface-muted/50 cursor-pointer"
+                      className={`transition-colors cursor-pointer ${
+                        isSelected ? 'bg-accent-subtle/30 hover:bg-accent-subtle/50' : 'hover:bg-surface-muted/50'
+                      }`}
                     >
+                      {/* Checkbox */}
+                      <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          aria-label={`Select campaign ${camp.id}`}
+                          checked={isSelected}
+                          onChange={(e) => toggleSelectOne(camp.id, e)}
+                          className="rounded border-border text-accent focus:ring-accent cursor-pointer"
+                        />
+                      </td>
+
                       {/* Campaign Title & Subject */}
                       <td className="p-3.5">
                         <div className="font-semibold text-foreground text-xs flex items-center space-x-1.5">
@@ -250,13 +386,20 @@ export const History = () => {
 
                       {/* Actions */}
                       <td className="p-3.5 text-right">
-                        <div className="inline-flex items-center space-x-1.5" onClick={(e) => e.stopPropagation()}>
+                        <div className="inline-flex items-center space-x-1" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={() => handleExportCsv(camp.id)}
                             title="Export to CSV"
                             className="p-1.5 rounded-control text-text-muted hover:text-foreground hover:bg-surface-muted transition-colors cursor-pointer"
                           >
                             <Download className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteConfirm({ type: 'single', campaign: camp })}
+                            title="Delete Mail Record"
+                            className="p-1.5 rounded-control text-text-muted hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleOpenDetail(camp)}
@@ -348,6 +491,14 @@ export const History = () => {
                   </button>
 
                   <button
+                    onClick={() => setDeleteConfirm({ type: 'single', campaign: selectedCampaign })}
+                    className="px-3 py-1.5 rounded-control text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 flex items-center space-x-1.5 transition cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Mail</span>
+                  </button>
+
+                  <button
                     type="button"
                     onClick={() => setIsDetailOpen(false)}
                     className="p-1 rounded-control text-text-muted hover:text-foreground cursor-pointer"
@@ -421,18 +572,19 @@ export const History = () => {
                             <th className="p-2.5">Status</th>
                             <th className="p-2.5">Opened</th>
                             <th className="p-2.5">Clicks</th>
+                            <th className="p-2.5 text-right">Action</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border-subtle bg-surface text-[11px]">
                           {loadingDetails ? (
                             <tr>
-                              <td colSpan={4} className="p-6 text-center text-text-muted italic">
+                              <td colSpan={5} className="p-6 text-center text-text-muted italic">
                                 Loading recipient details...
                               </td>
                             </tr>
                           ) : campaignRecipients.length === 0 ? (
                             <tr>
-                              <td colSpan={4} className="p-6 text-center text-text-muted italic">
+                              <td colSpan={5} className="p-6 text-center text-text-muted italic">
                                 No recipient audit logs recorded.
                               </td>
                             </tr>
@@ -476,6 +628,15 @@ export const History = () => {
                                     <span className="text-text-muted">—</span>
                                   )}
                                 </td>
+                                <td className="p-2.5 text-right">
+                                  <button
+                                    onClick={() => setDeleteConfirm({ type: 'recipient', recipient: rec })}
+                                    title="Delete recipient record"
+                                    className="p-1 rounded text-text-muted hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </td>
                               </tr>
                             ))
                           )}
@@ -494,6 +655,104 @@ export const History = () => {
                   className="px-4 py-2 rounded-control bg-surface border border-border hover:bg-surface-muted text-xs font-semibold text-foreground transition cursor-pointer"
                 >
                   Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deleteConfirm && (
+          <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isDeleting && setDeleteConfirm(null)}
+              className="fixed inset-0 bg-neutral-11/60 dark:bg-black/75 backdrop-blur-xs"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative bg-surface rounded-panel border border-border shadow-floating max-w-md w-full p-6 space-y-4 z-10"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-pill bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center shrink-0">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-display font-semibold text-foreground text-sm">
+                    {deleteConfirm.type === 'bulk'
+                      ? `Delete ${deleteConfirm.count} Mail Campaigns?`
+                      : deleteConfirm.type === 'recipient'
+                      ? 'Delete Recipient Mail Record?'
+                      : 'Delete Mail Campaign?'}
+                  </h3>
+                  <p className="text-xs text-text-muted mt-0.5">
+                    This action cannot be undone. All telemetry, logs, and recipient data will be permanently removed.
+                  </p>
+                </div>
+              </div>
+
+              {deleteConfirm.type === 'single' && deleteConfirm.campaign && (
+                <div className="p-3 bg-surface-muted rounded-control border border-border-subtle text-xs space-y-1">
+                  <div className="font-semibold text-foreground truncate">
+                    {deleteConfirm.campaign.title || `Campaign #${deleteConfirm.campaign.id}`}
+                  </div>
+                  <div className="text-text-muted truncate">
+                    Subject: {deleteConfirm.campaign.subject || '<No Subject>'}
+                  </div>
+                </div>
+              )}
+
+              {deleteConfirm.type === 'recipient' && deleteConfirm.recipient && (
+                <div className="p-3 bg-surface-muted rounded-control border border-border-subtle text-xs space-y-1">
+                  <div className="font-semibold text-foreground truncate">
+                    {deleteConfirm.recipient.email}
+                  </div>
+                  <div className="text-text-muted truncate">
+                    Status: {deleteConfirm.recipient.status}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end space-x-2 pt-2">
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => setDeleteConfirm(null)}
+                  className="px-3.5 py-2 rounded-control text-xs font-semibold bg-surface-muted hover:bg-surface text-foreground border border-border transition cursor-pointer disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => {
+                    if (deleteConfirm.type === 'single') {
+                      handleDeleteCampaign(deleteConfirm.campaign.id);
+                    } else if (deleteConfirm.type === 'bulk') {
+                      handleBulkDelete();
+                    } else if (deleteConfirm.type === 'recipient') {
+                      handleDeleteRecipient(deleteConfirm.recipient.id);
+                    }
+                  }}
+                  className="px-3.5 py-2 rounded-control text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white shadow-xs flex items-center space-x-1.5 transition cursor-pointer disabled:opacity-50"
+                >
+                  {isDeleting ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-pill animate-spin" />
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete Permanently</span>
+                    </>
+                  )}
                 </button>
               </div>
             </motion.div>
