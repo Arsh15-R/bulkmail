@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { GoogleLoginButton } from '../components/GoogleLoginButton';
@@ -11,6 +11,14 @@ export const Signup = ({ onSwitchToLogin }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const redirectErr = sessionStorage.getItem('bm_auth_error');
+    if (redirectErr) {
+      setError(redirectErr);
+      sessionStorage.removeItem('bm_auth_error');
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

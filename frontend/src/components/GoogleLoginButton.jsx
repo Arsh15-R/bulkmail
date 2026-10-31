@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, X, Settings2, KeyRound, ExternalLink, AlertCircle, RefreshCw, Trash2, CheckCircle2 } from 'lucide-react';
+import { Sparkles, X, Settings2, KeyRound, ExternalLink, AlertCircle, RefreshCw, Trash2, CheckCircle2, ArrowRight } from 'lucide-react';
 
 export const GoogleLoginButton = ({ text = 'Continue with Google', onError }) => {
   const { googleLogin } = useAuth();
@@ -11,6 +11,7 @@ export const GoogleLoginButton = ({ text = 'Continue with Google', onError }) =>
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [tempClientId, setTempClientId] = useState('');
   const [validationWarning, setValidationWarning] = useState('');
+  const [popupBlocked, setPopupBlocked] = useState(false);
   const timeoutRef = useRef(null);
 
   // 1. Fetch or resolve Google Client ID
@@ -78,6 +79,22 @@ export const GoogleLoginButton = ({ text = 'Continue with Google', onError }) =>
     setLoading(false);
   };
 
+  const handleDirectRedirect = () => {
+    if (!clientId) {
+      setTempClientId('');
+      setShowConfigModal(true);
+      return;
+    }
+
+    const currentOrigin = window.location.origin;
+    const redirectUri = encodeURIComponent(currentOrigin);
+    const scope = encodeURIComponent('email profile openid');
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId.trim())}&redirect_uri=${redirectUri}&response_type=token&scope=${scope}&prompt=select_account`;
+    
+    // Direct browser navigation - 100% immune to popup blockers
+    window.location.href = googleAuthUrl;
+  };
+
   const triggerGoogleSignIn = (activeClientId) => {
     if (!activeClientId) {
       setTempClientId('');
@@ -86,7 +103,8 @@ export const GoogleLoginButton = ({ text = 'Continue with Google', onError }) =>
     }
 
     if (!window.google?.accounts?.oauth2) {
-      if (onError) onError('Google Sign-In is initializing. Please wait a moment and click again.');
+      // If oauth2 client is not loaded yet, use redirect flow
+      handleDirectRedirect();
       return;
     }
 
@@ -94,13 +112,15 @@ export const GoogleLoginButton = ({ text = 'Continue with Google', onError }) =>
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       setLoading(false);
+      setPopupBlocked(true);
       if (onError) {
-        onError('Google Sign-In window took too long to respond. If a pop-up was blocked, please click the pop-up icon in your browser address bar to allow pop-ups for this site.');
+        onError('Google Sign-In window took too long to respond. Pop-ups might be blocked by your browser.');
       }
     }, 20000);
 
     try {
       setLoading(true);
+      setPopupBlocked(false);
 
       const tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: activeClientId.trim(),
@@ -115,7 +135,7 @@ export const GoogleLoginButton = ({ text = 'Continue with Google', onError }) =>
             setLoading(false);
             if (tokenResponse.error !== 'popup_closed_by_user') {
               if (onError) {
-                onError(`Google Sign-In failed (${tokenResponse.error}): ${tokenResponse.error_description || 'Consent window was closed or not completed.'}`);
+                onError(`Google Sign-In failed (${tokenResponse.error}): ${tokenResponse.error_description || 'Window was closed or cancelled.'}`);
               }
             }
             return;
@@ -138,11 +158,11 @@ export const GoogleLoginButton = ({ text = 'Continue with Google', onError }) =>
           console.warn('Google Identity error_callback:', error);
 
           if (error?.type === 'popup_failed_to_open') {
+            setPopupBlocked(true);
             if (onError) {
-              onError('Pop-up was blocked by your browser! Please check the address bar and click "Always allow pop-ups" for this site, then try again.');
+              onError('Pop-up window was blocked by your browser! You can allow pop-ups in your address bar or click "Sign In with Redirect" below.');
             }
           } else if (error?.type === 'popup_closed') {
-            // Popup closed by user
             setLoading(false);
           } else {
             if (onError) {
@@ -159,7 +179,8 @@ export const GoogleLoginButton = ({ text = 'Continue with Google', onError }) =>
         timeoutRef.current = null;
       }
       setLoading(false);
-      if (onError) onError(err.message || 'Failed to open Google authentication window. Please check your Google Client ID.');
+      // Fallback directly to full-page redirect
+      handleDirectRedirect();
     }
   };
 
@@ -203,11 +224,52 @@ export const GoogleLoginButton = ({ text = 'Continue with Google', onError }) =>
     setValidationWarning('');
     setShowConfigModal(false);
     setLoading(false);
-    if (onError) onError('Google Client ID removed. You can now enter a new one or continue with email.');
+    setPopupBlocked(false);
+    if (onError) onError('Google Client ID removed. You can enter a new one or sign in with email.');
   };
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
+      {/* Pop-up Blocked Solution Banner */}
+      {popupBlocked && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-3 rounded-control bg-amber-500/10 border border-amber-500/25 text-xs space-y-2"
+        >
+          <div className="flex items-center space-x-1.5 font-semibold text-amber-600 dark:text-amber-400">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>Pop-up Window Blocked by Browser</span>
+          </div>
+          <p className="text-[11px] text-text-muted leading-relaxed">
+            Your browser prevented Google from opening in a pop-up. To fix this:
+          </p>
+          <div className="p-2 bg-surface rounded border border-border-subtle text-[11px] text-text-muted space-y-1">
+            <div>1. Look at the <strong>right side of your address bar (URL bar)</strong>.</div>
+            <div>2. Click the icon with the <strong>red cross</strong> (Pop-up blocked).</div>
+            <div>3. Choose <strong>"Always allow pop-ups and redirects from bulkmail-gold.vercel.app"</strong> ➔ click <strong>Done</strong>.</div>
+          </div>
+          <div className="pt-1 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={handleDirectRedirect}
+              className="px-3 py-1.5 rounded bg-accent text-accent-foreground font-semibold text-xs hover:opacity-95 shadow-xs flex items-center space-x-1 transition cursor-pointer"
+            >
+              <span>Sign In with Redirect (No Pop-ups)</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setPopupBlocked(false)}
+              className="text-[11px] text-text-muted hover:text-foreground"
+            >
+              Dismiss
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Button Render Area */}
       <div className="relative">
         <motion.button
           whileTap={!loading ? { scale: 0.98 } : {}}
@@ -254,7 +316,7 @@ export const GoogleLoginButton = ({ text = 'Continue with Google', onError }) =>
         </motion.button>
       </div>
 
-      {/* Auxiliary Client ID Indicator & Edit Trigger */}
+      {/* Auxiliary Client ID Indicator & Controls */}
       <div className="flex items-center justify-between text-[11px] text-text-muted px-1">
         {clientId ? (
           <span className="flex items-center space-x-1.5 truncate max-w-[220px]" title={`Active Client ID: ${clientId}`}>
@@ -267,17 +329,29 @@ export const GoogleLoginButton = ({ text = 'Continue with Google', onError }) =>
           </span>
         )}
 
-        <button
-          type="button"
-          onClick={() => {
-            setTempClientId(clientId);
-            setValidationWarning('');
-            setShowConfigModal(true);
-          }}
-          className="text-accent hover:underline font-medium cursor-pointer"
-        >
-          {clientId ? 'Edit Client ID' : 'Configure'}
-        </button>
+        <div className="flex items-center space-x-2">
+          {clientId && (
+            <button
+              type="button"
+              onClick={handleDirectRedirect}
+              className="text-text-muted hover:text-foreground transition cursor-pointer"
+              title="Sign in using direct page redirect instead of pop-up"
+            >
+              Use Redirect
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setTempClientId(clientId);
+              setValidationWarning('');
+              setShowConfigModal(true);
+            }}
+            className="text-accent hover:underline font-medium cursor-pointer"
+          >
+            {clientId ? 'Edit Client ID' : 'Configure'}
+          </button>
+        </div>
       </div>
 
       {/* Google OAuth Configuration Modal */}
