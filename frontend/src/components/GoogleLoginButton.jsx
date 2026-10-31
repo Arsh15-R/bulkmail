@@ -431,13 +431,36 @@ export const GoogleLoginButton = ({ text = 'Continue with Google', onError }) =>
                   )}
                 </div>
 
-                <div className="p-3 bg-surface-muted rounded-control border border-border-subtle text-[11px] text-text-muted space-y-1.5">
-                  <div className="font-semibold text-foreground">Required Google Console Settings:</div>
+                <div className="p-3 bg-surface-muted rounded-control border border-border-subtle text-[11px] text-text-muted space-y-2">
+                  <div className="font-semibold text-foreground">Required Google Cloud Console Settings:</div>
                   <div>In your Google Cloud OAuth Client ID configuration:</div>
-                  <div>1. Application Type: <strong>Web application</strong></div>
-                  <div>2. Add to <strong>Authorized JavaScript origins</strong>:</div>
-                  <div className="font-mono text-accent select-all bg-surface px-1.5 py-0.5 rounded border border-border-subtle">https://bulkmail-gold.vercel.app</div>
-                  <div className="font-mono text-accent select-all bg-surface px-1.5 py-0.5 rounded border border-border-subtle">http://localhost:5173</div>
+                  
+                  <div>
+                    <div className="font-semibold text-text-secondary mb-1">1. Authorized JavaScript origins:</div>
+                    <div className="space-y-1 font-mono text-accent text-[10px]">
+                      <div className="select-all bg-surface px-2 py-1 rounded border border-border-subtle flex justify-between items-center">
+                        <span>https://bulkmail-gold.vercel.app</span>
+                      </div>
+                      <div className="select-all bg-surface px-2 py-1 rounded border border-border-subtle flex justify-between items-center">
+                        <span>http://localhost:5173</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="font-semibold text-text-secondary mb-1">2. Authorized redirect URIs <span className="text-rose-500 font-bold">(Required for Redirect Sign-In)</span>:</div>
+                    <div className="space-y-1 font-mono text-accent text-[10px]">
+                      <div className="select-all bg-surface px-2 py-1 rounded border border-border-subtle flex justify-between items-center">
+                        <span>https://bulkmail-gold.vercel.app</span>
+                      </div>
+                      <div className="select-all bg-surface px-2 py-1 rounded border border-border-subtle flex justify-between items-center">
+                        <span>https://bulkmail-gold.vercel.app/</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-text-muted italic">
+                    Note: After adding and clicking <strong>Save</strong> in Google Console, Google takes ~15–30 seconds to update.
+                  </p>
                 </div>
 
                 <div className="flex items-center justify-between pt-2">
