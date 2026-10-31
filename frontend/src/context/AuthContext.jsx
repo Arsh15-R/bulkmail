@@ -28,23 +28,31 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    // Check if returning from Google OAuth redirect with #access_token=...
-    if (window.location.hash && window.location.hash.includes('access_token=')) {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get('access_token');
-      if (accessToken) {
-        window.history.replaceState(null, '', window.location.pathname);
-        setLoading(true);
-        googleLogin({ accessToken })
-          .catch((err) => {
-            console.warn('OAuth redirect exchange failed:', err);
-            sessionStorage.setItem('bm_auth_error', err.message || 'Google authentication failed.');
-          })
-          .finally(() => {
-            setLoading(false);
-          });
-        return;
-      }
+    // Check if returning from Google OAuth redirect with access_token (fragment or query)
+    const hashStr = window.location.hash.startsWith('#') ? window.location.hash.substring(1) : window.location.hash;
+    const hashParams = new URLSearchParams(hashStr);
+    const searchParams = new URLSearchParams(window.location.search);
+
+    const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
+    if (accessToken) {
+      window.history.replaceState(null, '', window.location.pathname);
+      setLoading(true);
+      googleLogin({ accessToken })
+        .catch((err) => {
+          console.warn('OAuth redirect exchange failed:', err);
+          sessionStorage.setItem('bm_auth_error', err.message || 'Google authentication failed.');
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+      return;
+    }
+
+    // Check if Google returned an error
+    const oauthError = hashParams.get('error_description') || hashParams.get('error') || searchParams.get('error_description') || searchParams.get('error');
+    if (oauthError) {
+      window.history.replaceState(null, '', window.location.pathname);
+      sessionStorage.setItem('bm_auth_error', `Google sign-in error: ${oauthError}`);
     }
 
     if (token) {

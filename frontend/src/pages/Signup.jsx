@@ -46,10 +46,10 @@ export const Signup = ({ onSwitchToLogin }) => {
         initial={{ opacity: 0, scale: 0.96, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 480, damping: 36 }}
-        className="max-w-md w-full bg-surface rounded-panel border border-border shadow-floating p-8 space-y-6"
+        className="max-w-md w-full bg-surface rounded-2xl border border-border shadow-2xl p-8 space-y-6"
       >
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-control bg-accent-subtle text-accent flex items-center justify-center mx-auto shadow-xs">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 text-white flex items-center justify-center mx-auto shadow-md shadow-indigo-500/25 ring-1 ring-white/25">
             <Sparkles className="w-6 h-6" />
           </div>
           <h1 className="text-xl font-display font-bold text-foreground tracking-tight">
@@ -60,10 +60,17 @@ export const Signup = ({ onSwitchToLogin }) => {
           </p>
         </div>
 
-        {error && (
-          <div className="p-3 rounded-control bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs flex items-center space-x-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
+        {error && !error.toLowerCase().includes('pop-up') && !error.toLowerCase().includes('popup') && (
+          <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs flex flex-col space-y-1.5">
+            <div className="flex items-center space-x-2 font-medium">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+            {error.includes('redirect_uri_mismatch') && (
+              <p className="text-[11px] text-text-muted pl-6">
+                Tip: In your Google Cloud Console tab, add <code className="text-foreground font-mono bg-surface px-1 py-0.5 rounded border border-border">https://bulkmail-gold.vercel.app</code> under <strong>Authorised redirect URIs</strong> and click Save.
+              </p>
+            )}
           </div>
         )}
 
@@ -96,7 +103,7 @@ export const Signup = ({ onSwitchToLogin }) => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Jane Doe or Acme Corp"
-                className="w-full pl-9 pr-3 py-2 rounded-control border border-border bg-surface-muted text-foreground placeholder:text-text-muted text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="w-full pl-9 pr-3 py-2 rounded-xl border border-border bg-surface-muted text-foreground placeholder:text-text-muted text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
               />
             </div>
           </div>
@@ -114,7 +121,7 @@ export const Signup = ({ onSwitchToLogin }) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="jane@company.com"
-                className="w-full pl-9 pr-3 py-2 rounded-control border border-border bg-surface-muted text-foreground placeholder:text-text-muted text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent font-mono"
+                className="w-full pl-9 pr-3 py-2 rounded-xl border border-border bg-surface-muted text-foreground placeholder:text-text-muted text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 font-mono"
               />
             </div>
           </div>
@@ -133,7 +140,7 @@ export const Signup = ({ onSwitchToLogin }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-9 pr-3 py-2 rounded-control border border-border bg-surface-muted text-foreground placeholder:text-text-muted text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="w-full pl-9 pr-3 py-2 rounded-xl border border-border bg-surface-muted text-foreground placeholder:text-text-muted text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
               />
             </div>
           </div>
@@ -142,11 +149,11 @@ export const Signup = ({ onSwitchToLogin }) => {
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 rounded-control bg-accent text-accent-foreground hover:opacity-95 font-semibold text-xs flex items-center justify-center space-x-2 shadow-resting disabled:opacity-50 transition cursor-pointer"
+            className="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold text-xs flex items-center justify-center space-x-2 shadow-md shadow-indigo-500/25 disabled:opacity-50 transition cursor-pointer"
           >
             {loading ? (
               <span className="flex items-center space-x-2">
-                <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-pill animate-spin" />
+                <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 <span>Creating account...</span>
               </span>
             ) : (
@@ -163,7 +170,7 @@ export const Signup = ({ onSwitchToLogin }) => {
           <button
             type="button"
             onClick={onSwitchToLogin}
-            className="font-semibold text-accent hover:underline cursor-pointer"
+            className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
           >
             Sign in
           </button>
