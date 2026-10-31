@@ -661,32 +661,48 @@ export const Compose = ({ onNavigateToHistory }) => {
         </div>
       </div>
 
-      {/* Mode Selector Cards (Animated Active Pill) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* Mode Selector Cards (Premium Glass & Gradient Accents) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {[
           {
             id: 'same',
             label: 'Same to Many',
             desc: 'Broadcast one email to multiple addresses or contacts',
-            icon: Users
+            tag: 'Broadcast',
+            icon: Users,
+            gradient: 'from-indigo-500 via-indigo-600 to-violet-600',
+            glow: 'shadow-indigo-500/25',
+            badgeBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20'
           },
           {
             id: 'single',
             label: 'Single Recipient',
-            desc: 'Direct 1-on-1 dispatch with real-time validation',
-            icon: User
+            desc: 'Direct 1-on-1 dispatch with real-time address validation',
+            tag: 'Direct 1-on-1',
+            icon: User,
+            gradient: 'from-emerald-500 to-teal-600',
+            glow: 'shadow-emerald-500/25',
+            badgeBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
           },
           {
             id: 'merge',
             label: 'Mail Merge (CSV)',
             desc: 'Dynamic rows with {{placeholder}} variable mapping',
-            icon: FileSpreadsheet
+            tag: 'Personalized',
+            icon: FileSpreadsheet,
+            gradient: 'from-amber-500 to-orange-600',
+            glow: 'shadow-amber-500/25',
+            badgeBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
           },
           {
             id: 'custom',
             label: 'Custom Table',
             desc: 'Per-row custom To, Subject, Body, CC & File',
-            icon: Sliders
+            tag: 'Matrix Rows',
+            icon: Sliders,
+            gradient: 'from-cyan-500 to-blue-600',
+            glow: 'shadow-cyan-500/25',
+            badgeBg: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20'
           }
         ].map((tab) => {
           const isSelected = mode === tab.id;
@@ -700,37 +716,38 @@ export const Compose = ({ onNavigateToHistory }) => {
                 setMode(tab.id);
                 markDirty();
               }}
-              className={`relative p-3.5 text-left rounded-panel border transition-all duration-200 outline-none group ${
+              className={`relative p-4 text-left rounded-2xl border transition-all duration-200 outline-none group cursor-pointer ${
                 isSelected
-                  ? 'border-accent bg-accent-subtle/40 shadow-xs'
-                  : 'bg-surface border-border hover:border-border-strong hover:bg-surface-muted/40'
+                  ? 'border-indigo-500 dark:border-indigo-400 bg-gradient-to-b from-indigo-50/70 via-surface to-surface dark:from-indigo-950/40 dark:via-surface dark:to-surface shadow-md shadow-indigo-500/10 ring-2 ring-indigo-500/20 -translate-y-0.5'
+                  : 'bg-surface border-border/80 hover:border-indigo-500/40 hover:bg-surface-muted/50 hover:-translate-y-0.5 shadow-xs'
               }`}
             >
-              {isSelected && (
-                <motion.div
-                  layoutId="active-mode-card-ring"
-                  transition={{ type: 'spring', stiffness: 500, damping: 40 }}
-                  className="absolute inset-0 rounded-panel ring-2 ring-accent/30 pointer-events-none"
-                />
-              )}
               <div className="flex items-start justify-between">
                 <div
-                  className={`w-7 h-7 rounded-control flex items-center justify-center transition-colors ${
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
                     isSelected
-                      ? 'bg-accent text-accent-foreground shadow-xs'
-                      : 'bg-surface-muted text-text-muted group-hover:text-foreground'
+                      ? `bg-gradient-to-br ${tab.gradient} text-white shadow-md ${tab.glow}`
+                      : 'bg-surface-muted text-text-muted group-hover:text-foreground group-hover:scale-105'
                   }`}
                 >
-                  <TabIcon className="w-3.5 h-3.5" />
+                  <TabIcon className="w-4 h-4" />
                 </div>
-                {isSelected && (
-                  <span className="w-2 h-2 rounded-full bg-accent" />
-                )}
+                
+                <div className="flex items-center space-x-1.5">
+                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-semibold border ${tab.badgeBg}`}>
+                    {tab.tag}
+                  </span>
+                  {isSelected && (
+                    <span className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="mt-2.5 font-display font-semibold text-xs text-foreground tracking-tight">
+              <div className="mt-3 font-display font-bold text-xs text-foreground tracking-tight">
                 {tab.label}
               </div>
-              <p className="text-[11px] text-text-muted mt-1 leading-relaxed">
+              <p className="text-[11px] text-text-muted mt-1 leading-relaxed line-clamp-2">
                 {tab.desc}
               </p>
             </button>
@@ -754,7 +771,7 @@ export const Compose = ({ onNavigateToHistory }) => {
                 markDirty();
               }}
               placeholder="e.g. Monthly Newsletter - October 2026"
-              className="w-full text-xs rounded-control border border-border bg-surface-muted/40 px-3 py-2.5 text-foreground placeholder:text-text-muted focus:outline-none focus:border-accent focus:bg-surface transition-colors"
+              className="w-full text-xs font-medium rounded-xl border border-border bg-surface-muted/50 px-3.5 py-2.5 text-foreground placeholder:text-text-muted focus:outline-none focus:border-indigo-500 focus:bg-surface focus:ring-4 focus:ring-indigo-500/10 transition-all"
             />
           </div>
 
@@ -766,7 +783,7 @@ export const Compose = ({ onNavigateToHistory }) => {
               <button
                 type="button"
                 onClick={handleSaveAsTemplate}
-                className="text-[11px] font-semibold text-accent hover:underline flex items-center space-x-1"
+                className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center space-x-1 cursor-pointer"
               >
                 <Save className="w-3 h-3" />
                 <span>Save as Template</span>
@@ -775,7 +792,7 @@ export const Compose = ({ onNavigateToHistory }) => {
             <select
               value={selectedTemplateId}
               onChange={handleTemplateChange}
-              className="w-full text-xs rounded-control border border-border bg-surface-muted/40 px-3 py-2.5 text-foreground focus:outline-none focus:border-accent focus:bg-surface transition-colors cursor-pointer"
+              className="w-full text-xs font-medium rounded-xl border border-border bg-surface-muted/50 px-3.5 py-2.5 text-foreground focus:outline-none focus:border-indigo-500 focus:bg-surface focus:ring-4 focus:ring-indigo-500/10 transition-all cursor-pointer"
             >
               <option value="">-- Choose from saved templates --</option>
               {savedTemplates.map((t) => (
@@ -1077,10 +1094,51 @@ export const Compose = ({ onNavigateToHistory }) => {
 
         {/* Subject Line (Used in modes 1, 2, 3) */}
         {mode !== 'custom' && (
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-1.5">
-              Email Subject <span className="text-danger">*</span>
-            </label>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-semibold text-foreground">
+                Email Subject <span className="text-danger">*</span>
+              </label>
+              <div className="flex items-center space-x-1.5 text-[11px] text-text-muted">
+                <span className="hidden sm:inline text-[10px] uppercase font-mono tracking-wider">Insert Tag:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubject(prev => prev ? `${prev} {{name}}` : '{{name}}');
+                    markDirty();
+                  }}
+                  title="Insert recipient name placeholder"
+                  className="px-2 py-0.5 rounded-md font-mono text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 hover:bg-indigo-100 transition cursor-pointer"
+                >
+                  + name
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubject(prev => prev ? `${prev} {{email}}` : '{{email}}');
+                    markDirty();
+                  }}
+                  title="Insert recipient email placeholder"
+                  className="px-2 py-0.5 rounded-md font-mono text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 hover:bg-indigo-100 transition cursor-pointer"
+                >
+                  + email
+                </button>
+                {mode === 'merge' && mergePlaceholders.filter(p => p !== 'name' && p !== 'email').slice(0, 3).map(p => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => {
+                      setSubject(prev => prev ? `${prev} {{${p}}}` : `{{${p}}}`);
+                      markDirty();
+                    }}
+                    title={`Insert {{${p}}} placeholder`}
+                    className="px-2 py-0.5 rounded-md font-mono text-[10px] font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-100 transition cursor-pointer"
+                  >
+                    + {p}
+                  </button>
+                ))}
+              </div>
+            </div>
             <input
               type="text"
               value={subject}
@@ -1093,7 +1151,7 @@ export const Compose = ({ onNavigateToHistory }) => {
                   ? 'Hello {{name|valued client}}, update regarding #{{order_id}}'
                   : 'Important Product Update'
               }
-              className="w-full text-sm font-medium rounded-control border border-border bg-surface-muted/40 px-3 py-2.5 text-foreground placeholder:text-text-muted focus:outline-none focus:border-accent focus:bg-surface transition-colors"
+              className="w-full text-sm font-medium rounded-xl border border-border bg-surface-muted/50 px-3.5 py-2.5 text-foreground placeholder:text-text-muted focus:outline-none focus:border-indigo-500 focus:bg-surface focus:ring-4 focus:ring-indigo-500/10 transition-all"
             />
           </div>
         )}
@@ -1321,26 +1379,33 @@ export const Compose = ({ onNavigateToHistory }) => {
         </div>
       </div>
 
-      {/* Sticky Bottom Floating Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-surface/90 backdrop-blur-md border-t border-border px-4 py-3 sm:px-6">
+      {/* Sticky Bottom Floating Action Bar (Premium Glass Design) */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-surface/85 backdrop-blur-xl border-t border-border shadow-2xl px-4 py-3 sm:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           {/* Summary status on the left */}
           <div className="flex items-center space-x-3 text-xs">
-            <span className="font-semibold text-foreground flex items-center space-x-1.5">
-              <span className="w-2 h-2 rounded-full bg-accent" />
-              <span>
-                {recipientCount} recipient{recipientCount === 1 ? '' : 's'} ready
+            <span className="font-semibold text-foreground flex items-center space-x-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <span className="font-bold text-xs tracking-tight">
+                {recipientCount} recipient{recipientCount === 1 ? '' : 's'} staged
               </span>
             </span>
 
+            <span className="hidden md:inline-flex text-[11px] font-mono text-text-muted">
+              · {Math.max(0, (user?.daily_send_limit || 500) - (user?.sent_today || 0))} daily quota remaining
+            </span>
+
             {isDryRun && (
-              <span className="hidden sm:inline-flex px-2 py-0.5 rounded-pill bg-warning/15 text-warning font-mono text-[10px] font-semibold border border-warning/25">
-                Dry Run Mode
+              <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono text-[10px] font-semibold border border-amber-500/25">
+                Simulation Dry-Run
               </span>
             )}
 
             {isScheduling && (
-              <span className="hidden sm:inline-flex px-2 py-0.5 rounded-pill bg-accent-subtle text-accent font-mono text-[10px] font-semibold border border-accent/25">
+              <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-mono text-[10px] font-semibold border border-indigo-500/25">
                 Scheduled
               </span>
             )}
@@ -1353,7 +1418,7 @@ export const Compose = ({ onNavigateToHistory }) => {
               type="button"
               onClick={handleSendTestToMe}
               title={`Sends test sample to your email (${user?.email})`}
-              className="px-3 py-2 rounded-control text-xs font-semibold bg-surface-muted hover:bg-surface text-foreground border border-border transition-colors hidden sm:flex items-center space-x-1.5"
+              className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-surface hover:bg-surface-muted text-foreground border border-border/80 shadow-xs hover:border-indigo-500/30 transition-all hidden sm:flex items-center space-x-1.5 cursor-pointer"
             >
               <MailCheck className="w-3.5 h-3.5 text-text-muted" />
               <span>Send Test</span>
@@ -1363,21 +1428,21 @@ export const Compose = ({ onNavigateToHistory }) => {
             <button
               type="button"
               onClick={handleListCleanup}
-              className="px-3 py-2 rounded-control text-xs font-semibold bg-surface-muted hover:bg-surface text-foreground border border-border flex items-center space-x-1.5 transition-colors"
+              className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25 flex items-center space-x-1.5 transition-all shadow-xs cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5 text-warning" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
               <span>Clean List</span>
             </button>
 
-            {/* Preview & Send Button */}
+            {/* Preview & Dispatch Button */}
             <motion.button
               whileTap={{ scale: 0.98 }}
               type="button"
               onClick={handleOpenPreview}
-              className="px-4 py-2 rounded-control text-xs font-semibold bg-accent text-accent-foreground hover:opacity-90 shadow-resting flex items-center space-x-2 transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/35 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center space-x-2 cursor-pointer"
             >
               <Eye className="w-4 h-4" />
-              <span>Preview & Send</span>
+              <span>Preview & Dispatch</span>
             </motion.button>
           </div>
         </div>

@@ -7,11 +7,21 @@
   body {
     font-family: var(--font-body, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
     background-color: var(--background);
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.035) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.035) 0px, transparent 50%);
+    background-attachment: fixed;
     color: var(--foreground);
     letter-spacing: var(--tracking-body, -0.01em);
     line-height: var(--leading-body, 1.4);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  [data-theme="dark"] body {
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 60%),
+      radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.08) 0px, transparent 60%);
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -27,8 +37,8 @@
 
 /* Custom premium scrollbar using Arc neutral tokens */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -47,8 +57,8 @@
 /* Subtle glass and panel utility */
 .arc-glass {
   background: color-mix(in oklab, var(--surface) 85%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .arc-panel {
@@ -56,4 +66,13 @@
   border: 1px solid var(--border);
   box-shadow: var(--shadow-resting);
   border-radius: var(--radius-panel);
+}
+
+/* Premium Card hover glow effect */
+.hover-card-glow {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-card-glow:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-raised);
 }

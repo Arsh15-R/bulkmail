@@ -1,70 +1,63 @@
 :root {
   color-scheme: light;
-  --neutral-0: oklch(100% 0 0);
-  --neutral-1: oklch(99% 0 0);
-  --neutral-2: oklch(97.8% 0 0);
-  --neutral-3: oklch(95.8% 0 0);
-  --neutral-4: oklch(91.5% 0 0);
-  --neutral-5: oklch(84% 0 0);
-  --neutral-6: oklch(72% 0 0);
-  --neutral-7: oklch(59% 0 0);
-  --neutral-8: oklch(46% 0 0);
-  --neutral-9: oklch(34% 0 0);
-  --neutral-10: oklch(23% 0 0);
-  --neutral-11: oklch(15% 0 0);
-  --background: var(--neutral-0);
-  --surface: var(--neutral-0);
-  --surface-raised: var(--neutral-0);
-  --surface-muted: var(--neutral-2);
-  --foreground: var(--neutral-11);
-  --text-secondary: var(--neutral-8);
-  --text-muted: var(--neutral-7);
-  --border: oklch(93.5% 0 0);
-  --border-subtle: oklch(96.5% 0 0);
-  --border-strong: oklch(82% 0 0);
-  --accent: oklch(33% 0 0);
-  --accent-strong: oklch(24% 0 0);
-  --accent-subtle: oklch(33% 0 0 / .1);
-  --accent-foreground: var(--background);
-  /* Selection controls (switch, checkbox, radio, slider). --control-on fills a chosen control; --control-glyph is the check or dot drawn on it;
-     thumbs stay white in both states so they always read against the track. Tuned per accent below so white thumbs hold on every hue. */
-  --control-on: oklch(23% 0 0);
-  --control-glyph: oklch(100% 0 0);
-  --control-track: oklch(89.5% 0 0);
-  --control-track-hover: oklch(86% 0 0);
-  --control-thumb: oklch(100% 0 0);
-  --control-thumb-on: oklch(100% 0 0);
-  --control-thumb-shadow: 0 0 0 .5px oklch(0% 0 0 / .07), 0 1px 2px oklch(0% 0 0 / .14), 0 2px 6px oklch(0% 0 0 / .06);
-  --control-on-subtle: color-mix(in oklab, var(--control-on) 10%, transparent);
-  /* Slider fills. Same as --control-on except neutral dark, where a mid grey keeps the white thumb distinct. */
+  --neutral-0: #ffffff;
+  --neutral-1: #fbfcfd;
+  --neutral-2: #f8fafc;
+  --neutral-3: #f1f5f9;
+  --neutral-4: #e2e8f0;
+  --neutral-5: #cbd5e1;
+  --neutral-6: #94a3b8;
+  --neutral-7: #64748b;
+  --neutral-8: #475569;
+  --neutral-9: #334155;
+  --neutral-10: #1e293b;
+  --neutral-11: #0f172a;
+
+  /* Premium Light Canvas & Surfaces */
+  --background: #f8fafc;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-muted: #f1f5f9;
+  --foreground: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  --border-strong: #cbd5e1;
+  --accent: #6366f1;
+  --accent-strong: #4f46e5;
+  --accent-subtle: rgba(99, 102, 241, 0.08);
+  --accent-foreground: #ffffff;
+  --control-on: #6366f1;
+  --control-glyph: #ffffff;
+  --control-track: #e2e8f0;
+  --control-track-hover: #cbd5e1;
+  --control-thumb: #ffffff;
+  --control-thumb-on: #ffffff;
+  --control-thumb-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --control-on-subtle: rgba(99, 102, 241, 0.1);
   --control-fill: var(--control-on);
-  /* Pointer focus draws no ring (product decision). --focus-ring is the halo a few fields drew for any input method, so it stays transparent.
-     Keyboard focus uses the outline at the end of this file; tune it with --focus-outline, --focus-outline-width and --focus-outline-offset. */
-  --focus-ring: transparent;
-  --success: oklch(49% .19 150);
-  --warning: oklch(58% .18 75);
-  --danger: oklch(54% .21 25);
-  --shadow-resting: 0 1px 2px oklch(0% 0 0 / .035);
-  --shadow-raised: 0 6px 18px oklch(0% 0 0 / .065), 0 1px 3px oklch(0% 0 0 / .035);
-  --shadow-floating: 0 20px 48px oklch(0% 0 0 / .105), 0 3px 10px oklch(0% 0 0 / .045);
-  /* Brand gradient: soft lavender to warm peach. Light enough for dark text (--arc-gradient-foreground, >12:1). */
-  --arc-gradient-from: oklch(90% .045 300);
-  --arc-gradient-to: oklch(92% .045 65);
-  --arc-gradient: linear-gradient(100deg, var(--arc-gradient-from), var(--arc-gradient-to));
-  --arc-gradient-foreground: oklch(22% .01 300);
-  /* Faint wash for backgrounds and tinted panels. */
-  --arc-gradient-soft: linear-gradient(135deg, oklch(97.5% .016 300), oklch(98% .016 65));
-  /* Hairline borders and rules. */
-  --arc-gradient-line: linear-gradient(100deg, oklch(83% .06 300), oklch(86% .06 65));
-  /* Text-safe stops for gradient text and small marks (>4.5:1 on the surface). */
-  --arc-gradient-ink: linear-gradient(100deg, oklch(47% .1 300), oklch(50% .09 55));
+  --focus-ring: rgba(99, 102, 241, 0.25);
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --shadow-resting: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  --shadow-raised: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03);
+  --shadow-floating: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --arc-gradient-from: #6366f1;
+  --arc-gradient-to: #8b5cf6;
+  --arc-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+  --arc-gradient-foreground: #ffffff;
+  --arc-gradient-soft: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(139, 92, 246, 0.06));
+  --arc-gradient-line: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.3));
+  --arc-gradient-ink: linear-gradient(135deg, #4f46e5, #7c3aed);
   --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem;
   --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
   --space-12: 3rem; --space-16: 4rem; --space-20: 5rem; --space-24: 6rem;
-  --radius-control: 1.125rem; --radius-panel: 1.625rem; --radius-surface: 2.125rem; --radius-pill: 9999px;
+  --radius-control: 0.75rem; --radius-panel: 1.25rem; --radius-surface: 1.5rem; --radius-pill: 9999px;
   --control-height-sm: 2.25rem; --control-height-md: 2.75rem; --control-height-lg: 3.125rem;
-  --font-display: var(--font-geist, "Geist Variable"), sans-serif;
-  --font-body: var(--font-inter, "Inter Variable"), sans-serif;
+  --font-display: var(--font-geist, "Geist Variable"), 'Inter', sans-serif;
+  --font-body: var(--font-inter, "Inter Variable"), 'Inter', sans-serif;
   --text-xs: .75rem; --text-sm: .875rem; --text-base: 1rem; --text-lg: 1.125rem;
   --text-xl: 1.375rem; --text-2xl: 1.75rem; --text-3xl: 2.25rem;
   --text-4xl: 3.25rem; --text-5xl: 4.5rem;
@@ -74,49 +67,48 @@
   --ease-standard: cubic-bezier(.22,1,.36,1);
   --ease-exit: cubic-bezier(.7,0,.84,0);
   --ease-in-out: cubic-bezier(.65,0,.35,1);
-  /* Critically damped spring: fast start, smooth settle, never overshoots (no jitter). Pair with --duration-spring for transform transitions. */
   --ease-spring: linear(0, 0.0213, 0.0739, 0.1443, 0.2235, 0.305, 0.3849, 0.4606, 0.5305, 0.594, 0.6508, 0.7011, 0.7452, 0.7836, 0.8168, 0.8454, 0.8699, 0.8907, 0.9084, 0.9234, 0.9361, 0.9467, 0.9557, 0.9632, 0.9694, 0.9747, 0.979, 0.9826, 0.9857, 0.9882, 0.9902, 0.992, 0.9934, 0.9946, 0.9955, 0.9963, 1);
   --duration-instant: 120ms; --duration-fast: 160ms; --duration-standard: 240ms; --duration-considered: 480ms; --duration-spring: 580ms;
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --background: oklch(19% 0 0);
-  --surface: oklch(21.5% 0 0);
-  --surface-raised: oklch(24% 0 0);
-  /* Keep muted surfaces and hover states distinct from the base surface in dark mode. */
-  --surface-muted: oklch(26% 0 0);
-  --foreground: oklch(96% 0 0);
-  --text-secondary: oklch(77% 0 0);
-  --text-muted: oklch(64% 0 0);
-  --border: oklch(29% 0 0);
-  --border-subtle: oklch(25% 0 0);
-  --border-strong: oklch(40% 0 0);
-  --focus-ring: transparent;
-  --accent: oklch(80% 0 0);
-  --accent-strong: oklch(91% 0 0);
-  --accent-subtle: oklch(80% 0 0 / .13);
-  /* Neutral dark inverts: a near-white track carries a dark thumb, so on and off never read alike. */
-  --control-on: oklch(93% 0 0);
-  --control-glyph: oklch(19% 0 0);
-  --control-track: oklch(33% 0 0);
-  --control-track-hover: oklch(37% 0 0);
-  --control-thumb: oklch(97% 0 0);
-  --control-thumb-on: oklch(19% 0 0);
-  --control-fill: oklch(62% 0 0);
-  --control-thumb-shadow: 0 0 0 .5px oklch(0% 0 0 / .3), 0 1px 2px oklch(0% 0 0 / .35), 0 2px 6px oklch(0% 0 0 / .2);
-  --success: oklch(78% .18 150);
-  --warning: oklch(83% .17 80);
-  --danger: oklch(76% .2 25);
-  --shadow-resting: 0 1px 2px oklch(0% 0 0 / .18);
-  --shadow-raised: 0 8px 22px oklch(0% 0 0 / .22);
-  --shadow-floating: 0 22px 55px oklch(0% 0 0 / .34);
-  --arc-gradient-from: oklch(38% .05 300);
-  --arc-gradient-to: oklch(40% .045 60);
-  --arc-gradient-foreground: oklch(96% .005 300);
-  --arc-gradient-soft: linear-gradient(135deg, oklch(23.5% .016 300), oklch(24% .014 65));
-  --arc-gradient-line: linear-gradient(100deg, oklch(48% .06 300), oklch(52% .055 65));
-  --arc-gradient-ink: linear-gradient(100deg, oklch(82% .07 300), oklch(86% .065 70));
+  /* Deep Luxury Midnight Obsidian */
+  --background: #090d16;
+  --surface: #0f172a;
+  --surface-raised: #1e293b;
+  --surface-muted: #131d33;
+  --foreground: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --focus-ring: rgba(129, 140, 248, 0.3);
+  --accent: #818cf8;
+  --accent-strong: #a5b4fc;
+  --accent-subtle: rgba(129, 140, 248, 0.15);
+  --accent-foreground: #090d16;
+  --control-on: #818cf8;
+  --control-glyph: #090d16;
+  --control-track: #1e293b;
+  --control-track-hover: #334155;
+  --control-thumb: #ffffff;
+  --control-thumb-on: #090d16;
+  --control-fill: #818cf8;
+  --control-thumb-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --shadow-resting: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  --shadow-raised: 0 4px 12px 0 rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --shadow-floating: 0 20px 40px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --arc-gradient-from: #818cf8;
+  --arc-gradient-to: #c084fc;
+  --arc-gradient-foreground: #ffffff;
+  --arc-gradient-soft: linear-gradient(135deg, rgba(129, 140, 248, 0.1), rgba(192, 132, 252, 0.1));
+  --arc-gradient-line: linear-gradient(135deg, rgba(129, 140, 248, 0.3), rgba(192, 132, 252, 0.3));
+  --arc-gradient-ink: linear-gradient(135deg, #a5b4fc, #e9d5ff);
 }
 
 :root[data-accent="neutral"] { --accent: oklch(33% 0 0); --accent-strong: oklch(24% 0 0); --accent-subtle: oklch(33% 0 0 / .1); }
