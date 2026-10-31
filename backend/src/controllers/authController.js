@@ -151,7 +151,7 @@ const getMe = async (req, res) => {
 
 const updateSettings = async (req, res) => {
   try {
-    const { name, dark_mode, daily_send_limit } = req.body;
+    const { name, dark_mode, daily_send_limit, avatar_url } = req.body;
     const updates = [];
     const params = [];
 
@@ -168,6 +168,11 @@ const updateSettings = async (req, res) => {
     if (daily_send_limit !== undefined && Number.isInteger(Number(daily_send_limit)) && Number(daily_send_limit) > 0) {
       updates.push('daily_send_limit = ?');
       params.push(Number(daily_send_limit));
+    }
+
+    if (avatar_url !== undefined) {
+      updates.push('avatar_url = ?');
+      params.push(avatar_url && typeof avatar_url === 'string' && avatar_url.trim().length > 0 ? avatar_url.trim() : null);
     }
 
     if (updates.length === 0) {
@@ -336,8 +341,8 @@ const googleAuth = async (req, res) => {
     if (user) {
       await run(
         `UPDATE users 
-         SET google_id = COALESCE(google_id, ?), 
-             avatar_url = COALESCE(avatar_url, ?),
+         SET google_id = COALESCE(?, google_id), 
+             avatar_url = COALESCE(?, avatar_url),
              auth_provider = CASE WHEN auth_provider = 'local' THEN 'google_linked' ELSE auth_provider END,
              updated_at = CURRENT_TIMESTAMP
          WHERE id = ?`,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -18,7 +18,11 @@ import {
   Mail,
   User,
   Activity,
-  Sparkles
+  Sparkles,
+  Camera,
+  Upload,
+  Trash2,
+  RefreshCw
 } from 'lucide-react';
 
 export const Settings = () => {
@@ -27,6 +31,24 @@ export const Settings = () => {
 
   const [name, setName] = useState(user?.name || '');
   const [dailyLimit, setDailyLimit] = useState(user?.daily_send_limit || 500);
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '');
+  const [syncingGoogle, setSyncingGoogle] = useState(false);
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name || '');
+      setDailyLimit(user.daily_send_limit || 500);
+      setAvatarUrl(user.avatar_url || '');
+    }
+  }, [user]);
+
+  const initials = (name || user?.name || user?.email || 'U')
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -44,16 +66,106 @@ export const Settings = () => {
     setTimeout(() => setToast(null), 3500);
   };
 
+  const handleSyncGooglePhoto = () => {
+    const savedClientId = localStorage.getItem('bm_google_client_id') || import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!savedClientId) {
+      showToast('Google Client ID not configured. Please enter a Photo URL or upload an image.', 'error');
+      return;
+    }
+
+    if (!window.google?.accounts?.oauth2) {
+      const currentOrigin = window.location.origin;
+      const redirectUri = encodeURIComponent(currentOrigin);
+      const scope = encodeURIComponent('email profile openid');
+      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(savedClientId.trim())}&redirect_uri=${redirectUri}&response_type=token&scope=${scope}&prompt=select_account`;
+      return;
+    }
+
+    try {
+      setSyncingGoogle(true);
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: savedClientId.trim(),
+        scope: 'email profile openid',
+        callback: async (tokenResponse) => {
+          if (tokenResponse.access_token) {
+            try {
+              const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+              });
+              const data = await res.json();
+              if (data.picture) {
+                setAvatarUrl(data.picture);
+                await updateUserSettings({ avatar_url: data.picture });
+                if (refreshUser) await refreshUser();
+                showToast('Gmail profile photo synced successfully!');
+              } else {
+                showToast('No profile photo found on your Google profile.', 'error');
+              }
+            } catch (err) {
+              showToast('Failed to fetch photo from Google.', 'error');
+            } finally {
+              setSyncingGoogle(false);
+            }
+          } else {
+            setSyncingGoogle(false);
+          }
+        },
+        error_callback: () => {
+          setSyncingGoogle(false);
+          const currentOrigin = window.location.origin;
+          const redirectUri = encodeURIComponent(currentOrigin);
+          const scope = encodeURIComponent('email profile openid');
+          window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(savedClientId.trim())}&redirect_uri=${redirectUri}&response_type=token&scope=${scope}&prompt=select_account`;
+        }
+      });
+
+      tokenClient.requestAccessToken({ prompt: 'select_account' });
+    } catch (err) {
+      setSyncingGoogle(false);
+      showToast(err.message || 'Failed to initialize Google Photo sync.', 'error');
+    }
+  };
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select a valid image file (PNG, JPG, or WebP).', 'error');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      showToast('Image file size must be under 2MB.', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const dataUrl = event.target.result;
+      setAvatarUrl(dataUrl);
+      try {
+        await updateUserSettings({ avatar_url: dataUrl });
+        if (refreshUser) await refreshUser();
+        showToast('Profile photo updated successfully!');
+      } catch (err) {
+        showToast(err.message || 'Failed to update photo.', 'error');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     try {
       await updateUserSettings({
         name: name.trim(),
+        avatar_url: avatarUrl.trim() || null,
         daily_send_limit: parseInt(dailyLimit, 10),
         dark_mode: isDarkMode ? 1 : 0
       });
       showToast('Profile and dispatch preferences saved.');
-      refreshUser();
+      if (refreshUser) await refreshUser();
     } catch (err) {
       showToast(err.message, 'error');
     }
@@ -192,6 +304,130 @@ export const Settings = () => {
                 value={user?.email || ''}
                 className="w-full rounded-control border border-border bg-surface-muted p-2 font-mono text-text-muted text-xs cursor-not-allowed select-none"
               />
+            </div>
+
+            {/* Profile Photo & Gmail Avatar Section */}
+            <div className="p-3.5 rounded-control bg-surface-muted/60 border border-border space-y-3">
+              <label className="block font-semibold text-text-secondary text-xs">
+                Profile Photo / Gmail Avatar
+              </label>
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3.5">
+                <div className="relative shrink-0 self-start sm:self-center">
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt={name || 'Profile'}
+                      className="w-16 h-16 rounded-full object-cover border-2 border-border shadow-xs"
+                      referrerPolicy="no-referrer"
+                      onError={() => {
+                        showToast('Failed to load image from URL. Reverting to initials.', 'error');
+                        setAvatarUrl('');
+                      }}
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-accent/15 text-accent font-display font-bold text-lg flex items-center justify-center border-2 border-accent/25 shadow-xs">
+                      {initials}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Upload new image"
+                    className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-accent text-accent-foreground hover:opacity-90 shadow-xs cursor-pointer"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    className="hidden"
+                  />
+                </div>
+
+                <div className="space-y-2 flex-1 min-w-0">
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled={syncingGoogle}
+                      onClick={handleSyncGooglePhoto}
+                      className="px-3 py-1.5 rounded-control bg-surface border border-border hover:bg-surface-muted text-foreground font-semibold text-xs flex items-center space-x-1.5 shadow-xs transition cursor-pointer disabled:opacity-50"
+                    >
+                      {syncingGoogle ? (
+                        <div className="w-3.5 h-3.5 border-2 border-accent border-t-transparent rounded-pill animate-spin" />
+                      ) : (
+                        <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
+                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                        </svg>
+                      )}
+                      <span>{syncingGoogle ? 'Syncing...' : 'Sync Gmail Photo'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-3 py-1.5 rounded-control bg-surface border border-border hover:bg-surface-muted text-text-secondary hover:text-foreground font-semibold text-xs flex items-center space-x-1.5 shadow-xs transition cursor-pointer"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Upload Photo</span>
+                    </button>
+
+                    {avatarUrl && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setAvatarUrl('');
+                          await updateUserSettings({ avatar_url: null });
+                          if (refreshUser) await refreshUser();
+                          showToast('Profile photo removed.');
+                        }}
+                        className="px-2.5 py-1.5 rounded-control text-danger hover:bg-danger/10 transition text-xs font-semibold flex items-center space-x-1 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Remove</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <p className="text-[11px] text-text-muted">
+                    Click <strong>Sync Gmail Photo</strong> to fetch your official Google/Gmail avatar, or upload any photo.
+                  </p>
+                </div>
+              </div>
+
+              {/* Photo Image URL input */}
+              <div className="pt-1.5 border-t border-border-subtle">
+                <label className="block text-[11px] font-medium text-text-muted mb-1">
+                  Or Photo Image URL
+                </label>
+                <div className="flex space-x-2">
+                  <input
+                    type="url"
+                    value={avatarUrl}
+                    onChange={(e) => setAvatarUrl(e.target.value)}
+                    placeholder="https://lh3.googleusercontent.com/... or image link"
+                    className="flex-1 rounded-control border border-border bg-surface text-foreground p-1.5 font-mono text-[11px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  />
+                  {avatarUrl !== (user?.avatar_url || '') && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await updateUserSettings({ avatar_url: avatarUrl.trim() || null });
+                        if (refreshUser) await refreshUser();
+                        showToast('Photo URL updated!');
+                      }}
+                      className="px-3 py-1 rounded-control bg-accent text-accent-foreground font-semibold text-xs hover:opacity-95 shadow-xs cursor-pointer shrink-0"
+                    >
+                      Apply
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div>

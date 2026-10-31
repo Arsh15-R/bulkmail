@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'motion/react';
@@ -15,18 +15,25 @@ import {
   User,
   ShieldCheck,
   Zap,
-  RotateCcw
+  RotateCcw,
+  Settings as SettingsIcon
 } from 'lucide-react';
 
 export const Navbar = ({
   isSidebarCollapsed,
   onToggleSidebar,
-  onToggleMobileNav
+  onToggleMobileNav,
+  onNavigate
 }) => {
   const { user, logout, refreshUser } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isRefreshingQuota, setIsRefreshingQuota] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [user?.avatar_url]);
 
   const handleRefreshQuota = async (e) => {
     if (e) e.stopPropagation();
@@ -157,15 +164,16 @@ export const Navbar = ({
             onClick={() => setIsUserMenuOpen(prev => !prev)}
             className="flex items-center space-x-2 pl-1.5 pr-2 py-1 rounded-control hover:bg-surface-muted transition-colors border border-transparent hover:border-border text-left"
           >
-            {user?.avatar_url ? (
+            {user?.avatar_url && !avatarError ? (
               <img
                 src={user.avatar_url}
                 alt={user.name || 'User'}
-                className="w-7 h-7 rounded-pill border border-border object-cover"
+                className="w-7 h-7 rounded-pill border border-border object-cover shrink-0"
                 referrerPolicy="no-referrer"
+                onError={() => setAvatarError(true)}
               />
             ) : (
-              <div className="w-7 h-7 rounded-pill bg-accent/15 text-accent-strong font-display font-semibold text-xs flex items-center justify-center border border-accent/25">
+              <div className="w-7 h-7 rounded-pill bg-accent/15 text-accent-strong font-display font-semibold text-xs flex items-center justify-center border border-accent/25 shrink-0">
                 {initials}
               </div>
             )}
@@ -190,15 +198,29 @@ export const Navbar = ({
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 4, scale: 0.98 }}
                   transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute right-0 mt-1.5 w-56 z-50 bg-surface rounded-panel border border-border shadow-raised p-1.5 text-xs text-foreground focus:outline-none"
+                  className="absolute right-0 mt-1.5 w-60 z-50 bg-surface rounded-panel border border-border shadow-raised p-1.5 text-xs text-foreground focus:outline-none"
                 >
-                  <div className="px-3 py-2 border-b border-border-subtle">
-                    <p className="font-semibold truncate text-foreground">
-                      {user?.name || 'Sender'}
-                    </p>
-                    <p className="text-[11px] text-text-muted truncate mt-0.5">
-                      {user?.email}
-                    </p>
+                  <div className="px-3 py-2.5 border-b border-border-subtle flex items-center space-x-2.5">
+                    {user?.avatar_url && !avatarError ? (
+                      <img
+                        src={user.avatar_url}
+                        alt={user.name || 'User'}
+                        className="w-8 h-8 rounded-pill border border-border object-cover shrink-0"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-pill bg-accent/15 text-accent-strong font-display font-semibold text-xs flex items-center justify-center border border-accent/25 shrink-0">
+                        {initials}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold truncate text-foreground leading-tight">
+                        {user?.name || 'Sender'}
+                      </p>
+                      <p className="text-[11px] text-text-muted truncate mt-0.5 font-mono">
+                        {user?.email}
+                      </p>
+                    </div>
                   </div>
 
                   <div className="py-1">
@@ -212,14 +234,28 @@ export const Navbar = ({
                     </div>
                   </div>
 
-                  <div className="border-t border-border-subtle pt-1 mt-1">
+                  <div className="border-t border-border-subtle pt-1 mt-1 space-y-0.5">
+                    {onNavigate && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          onNavigate('settings');
+                        }}
+                        className="w-full flex items-center space-x-2 px-3 py-2 rounded-control hover:bg-surface-muted transition-colors text-left font-medium text-text-secondary hover:text-foreground cursor-pointer"
+                      >
+                        <SettingsIcon className="w-3.5 h-3.5 text-accent" />
+                        <span>Profile Photo & Settings</span>
+                      </button>
+                    )}
+
                     <button
                       type="button"
                       onClick={() => {
                         setIsUserMenuOpen(false);
                         logout();
                       }}
-                      className="w-full flex items-center space-x-2 px-3 py-2 rounded-control text-danger hover:bg-danger/10 transition-colors text-left font-medium"
+                      className="w-full flex items-center space-x-2 px-3 py-2 rounded-control text-danger hover:bg-danger/10 transition-colors text-left font-medium cursor-pointer"
                     >
                       <LogOut className="w-3.5 h-3.5" />
                       <span>Log out</span>

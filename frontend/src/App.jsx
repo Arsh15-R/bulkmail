@@ -58,6 +58,7 @@ export function App() {
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebar={toggleSidebar}
         onToggleMobileNav={() => setIsMobileNavOpen(prev => !prev)}
+        onNavigate={setActiveTab}
       />
 
       {/* Main Workspace Body */}
