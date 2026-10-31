@@ -35,10 +35,14 @@ export const GoogleLoginButton = ({ text = 'Continue with Google', onError }) =>
         const res = await api.auth.getGoogleClientId();
         if (res.success && res.clientId) {
           setClientId(res.clientId);
+          return;
         }
       } catch (err) {
-        // Silent catch, fallback to user config
+        // Silent catch, fallback to default
       }
+
+      // Priority 4: Default production Client ID
+      setClientId('782542098396-f8ruvo4rb6mbia4416vdeb0316p8onga.apps.googleusercontent.com');
     };
 
     resolveClientId();

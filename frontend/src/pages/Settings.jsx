@@ -67,7 +67,10 @@ export const Settings = () => {
   };
 
   const handleSyncGooglePhoto = () => {
-    const savedClientId = localStorage.getItem('bm_google_client_id') || import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const savedClientId =
+      localStorage.getItem('bm_google_client_id') ||
+      import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+      '782542098396-f8ruvo4rb6mbia4416vdeb0316p8onga.apps.googleusercontent.com';
     if (!savedClientId) {
       showToast('Google Client ID not configured. Please enter a Photo URL or upload an image.', 'error');
       return;
